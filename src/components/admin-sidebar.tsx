@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 const navItems = [
-  { href: "/admin", label: "Properties", icon: Building2 },
-  { href: "/admin/fields", label: "Field Management", icon: Settings2 },
+  { href: "/admin", label: "รายการที่พัก", icon: Building2 },
+  { href: "/admin/fields", label: "จัดการฟิลด์", icon: Settings2 },
 ];
 
 export function AdminSidebar() {
@@ -26,7 +26,7 @@ export function AdminSidebar() {
       {/* Brand */}
       <div className="flex items-center gap-2 px-6 py-5">
         <LayoutGrid className="h-6 w-6 text-primary" />
-        <span className="font-semibold text-lg">PropAdmin</span>
+        <span className="font-semibold text-lg">Baanpool Admin</span>
       </div>
 
       <Separator />
@@ -63,7 +63,7 @@ export function AdminSidebar() {
         <Link href="/admin/property/new">
           <Button className="w-full gap-2">
             <Plus className="h-4 w-4" />
-            Add Property
+            เพิ่มที่พัก
           </Button>
         </Link>
       </div>

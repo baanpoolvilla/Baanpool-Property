@@ -16,8 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 const navItems = [
-  { href: "/admin", label: "Properties", icon: Building2 },
-  { href: "/admin/fields", label: "Field Management", icon: Settings2 },
+  { href: "/admin", label: "รายการที่พัก", icon: Building2 },
+  { href: "/admin/fields", label: "จัดการฟิลด์", icon: Settings2 },
 ];
 
 export function AdminMobileNav() {
@@ -36,11 +36,11 @@ export function AdminMobileNav() {
           <Menu className="h-5 w-5" />
         </SheetTrigger>
         <SheetContent side="left" className="w-64 p-0">
-          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+          <SheetTitle className="sr-only">เมนูนำทาง</SheetTitle>
           <div className="flex items-center justify-between px-6 py-5 border-b">
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-5 w-5 text-primary" />
-              <span className="font-semibold">PropAdmin</span>
+              <span className="font-semibold">Baanpool Admin</span>
             </div>
             <Button
               variant="ghost"
@@ -80,7 +80,7 @@ export function AdminMobileNav() {
             <Link href="/admin/property/new" onClick={() => setOpen(false)}>
               <Button className="w-full gap-2">
                 <Plus className="h-4 w-4" />
-                Add Property
+                เพิ่มที่พัก
               </Button>
             </Link>
           </div>

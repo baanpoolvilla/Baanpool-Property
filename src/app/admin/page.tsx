@@ -69,11 +69,10 @@ export default function PropertyListPage() {
       type: "application/json",
     });
     downloadBlob(blob, "properties.json");
-    toast.success(`Exported ${properties.length} properties as JSON`);
+    toast.success(`ส่งออก ${properties.length} รายการเป็น JSON แล้ว`);
   };
 
   const exportCSV = () => {
-    // Collect all unique data keys
     const allKeys = new Set<string>();
     for (const p of properties) {
       Object.keys(p.data).forEach((k) => allKeys.add(k));
@@ -91,9 +90,8 @@ export default function PropertyListPage() {
 
         if (val === null || val === undefined) return "";
         if (Array.isArray(val)) return val.join("; ");
-        if (typeof val === "boolean") return val ? "Yes" : "No";
+        if (typeof val === "boolean") return val ? "ใช่" : "ไม่";
         const s = String(val);
-        // Escape CSV
         return s.includes(",") || s.includes('"') || s.includes("\n")
           ? `"${s.replace(/"/g, '""')}"`
           : s;
@@ -105,7 +103,7 @@ export default function PropertyListPage() {
       type: "text/csv;charset=utf-8;",
     });
     downloadBlob(blob, "properties.csv");
-    toast.success(`Exported ${properties.length} properties as CSV`);
+    toast.success(`ส่งออก ${properties.length} รายการเป็น CSV แล้ว`);
   };
 
   const downloadBlob = (blob: Blob, filename: string) => {
@@ -120,7 +118,7 @@ export default function PropertyListPage() {
   const copyApiUrl = () => {
     const url = `${window.location.origin}/api/properties`;
     navigator.clipboard.writeText(url);
-    toast.success("API URL copied to clipboard");
+    toast.success("คัดลอก API URL แล้ว");
   };
 
   const load = useCallback(async () => {
@@ -131,7 +129,7 @@ export default function PropertyListPage() {
         : await fetchProperties();
       setProperties(data);
     } catch (err) {
-      toast.error("Failed to load properties");
+      toast.error("ไม่สามารถโหลดรายการที่พักได้");
     } finally {
       setLoading(false);
     }
@@ -145,10 +143,10 @@ export default function PropertyListPage() {
   const handleDelete = async (id: number) => {
     try {
       await deleteProperty(id);
-      toast.success("Property deleted");
+      toast.success("ลบที่พักแล้ว");
       load();
     } catch {
-      toast.error("Failed to delete property");
+      toast.error("ไม่สามารถลบที่พักได้");
     }
   };
 
@@ -160,10 +158,10 @@ export default function PropertyListPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
               <Building2 className="h-6 w-6" />
-              Properties
+              รายการที่พัก
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Manage your property listings
+              จัดการข้อมูลที่พักทั้งหมดของคุณ
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -174,27 +172,27 @@ export default function PropertyListPage() {
                 }
               >
                 <Download className="h-4 w-4" />
-                Export
+                ส่งออก
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={exportJSON}>
                   <FileJson className="h-4 w-4 mr-2" />
-                  Export as JSON
+                  ส่งออกเป็น JSON
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={exportCSV}>
                   <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Export as CSV
+                  ส่งออกเป็น CSV
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={copyApiUrl}>
                   <Share2 className="h-4 w-4 mr-2" />
-                  Copy API URL
+                  คัดลอก API URL
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Link href="/admin/property/new">
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
-                Add Property
+                เพิ่มที่พัก
               </Button>
             </Link>
           </div>
@@ -204,7 +202,7 @@ export default function PropertyListPage() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by House ID or name…"
+            placeholder="ค้นหาด้วยรหัสบ้านหรือชื่อ…"
             className="pl-10"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -215,7 +213,7 @@ export default function PropertyListPage() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">
-              All Properties
+              ที่พักทั้งหมด
               <Badge variant="secondary" className="ml-2">
                 {properties.length}
               </Badge>
@@ -229,10 +227,10 @@ export default function PropertyListPage() {
             ) : properties.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground">
                 <Building2 className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                <p>No properties found</p>
+                <p>ยังไม่มีที่พัก</p>
                 <Link href="/admin/property/new">
                   <Button variant="link" className="mt-2">
-                    Add your first property
+                    เพิ่มที่พักรายการแรก
                   </Button>
                 </Link>
               </div>
@@ -241,18 +239,18 @@ export default function PropertyListPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-28">House ID</TableHead>
-                      <TableHead>House Name</TableHead>
+                      <TableHead className="w-28">รหัสบ้าน</TableHead>
+                      <TableHead>ชื่อที่พัก</TableHead>
                       <TableHead className="hidden md:table-cell">
-                        Location
+                        ที่ตั้ง
                       </TableHead>
                       <TableHead className="hidden lg:table-cell">
-                        Guests
+                        ผู้เข้าพัก
                       </TableHead>
                       <TableHead className="hidden xl:table-cell w-52">
-                        Completeness
+                        ความสมบูรณ์
                       </TableHead>
-                      <TableHead className="text-right w-24">Actions</TableHead>
+                      <TableHead className="text-right w-24">จัดการ</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -264,7 +262,7 @@ export default function PropertyListPage() {
                         <TableCell>
                           {(p.data.house_name as string) || (
                             <span className="text-muted-foreground italic">
-                              Untitled
+                              ยังไม่ตั้งชื่อ
                             </span>
                           )}
                         </TableCell>
@@ -282,7 +280,7 @@ export default function PropertyListPage() {
                           {p.data.max_guests != null ? (
                             <span className="flex items-center gap-1 text-sm">
                               <Users className="h-3 w-3" />
-                              {String(p.data.max_guests)}
+                              {String(p.data.max_guests)} คน
                             </span>
                           ) : (
                             <span className="text-muted-foreground">—</span>
@@ -313,21 +311,21 @@ export default function PropertyListPage() {
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>
-                                    Delete Property
+                                    ลบที่พัก
                                   </AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Are you sure you want to delete{" "}
-                                    <strong>{p.house_id}</strong>? This action
-                                    cannot be undone.
+                                    คุณแน่ใจหรือไม่ว่าต้องการลบ{" "}
+                                    <strong>{p.house_id}</strong>?
+                                    การกระทำนี้ไม่สามารถย้อนกลับได้
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
                                   <AlertDialogAction
                                     onClick={() => handleDelete(p.id)}
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
-                                    Delete
+                                    ลบ
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>

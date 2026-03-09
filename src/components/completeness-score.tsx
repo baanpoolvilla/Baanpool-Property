@@ -30,10 +30,10 @@ export function CompletenessScore({ fields, data }: CompletenessScoreProps) {
     <div className="flex items-center gap-3">
       <Progress value={pct} className="h-2 flex-1" />
       <Badge variant="outline" className={color}>
-        {pct}% complete
+        {pct}% สมบูรณ์
       </Badge>
       <span className="text-xs text-muted-foreground">
-        {filledCount}/{activeFields.length} fields
+        กรอกแล้ว {filledCount}/{activeFields.length} รายการ
       </span>
     </div>
   );

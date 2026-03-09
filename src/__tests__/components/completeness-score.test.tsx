@@ -34,8 +34,8 @@ describe("CompletenessScore Component", () => {
     const fields = [makeField("a"), makeField("b", { id: 2, field_key: "b" })];
     render(<CompletenessScore fields={fields} data={{}} />);
 
-    expect(screen.getByText("0% complete")).toBeInTheDocument();
-    expect(screen.getByText("0/2 fields")).toBeInTheDocument();
+    expect(screen.getByText("0% สมบูรณ์")).toBeInTheDocument();
+    expect(screen.getByText("กรอกแล้ว 0/2 รายการ")).toBeInTheDocument();
   });
 
   it("shows 50% when half fields are filled", () => {
@@ -46,8 +46,8 @@ describe("CompletenessScore Component", () => {
     const data = { a: "filled" };
     render(<CompletenessScore fields={fields} data={data} />);
 
-    expect(screen.getByText("50% complete")).toBeInTheDocument();
-    expect(screen.getByText("1/2 fields")).toBeInTheDocument();
+    expect(screen.getByText("50% สมบูรณ์")).toBeInTheDocument();
+    expect(screen.getByText("กรอกแล้ว 1/2 รายการ")).toBeInTheDocument();
   });
 
   it("shows 100% when all fields are filled", () => {
@@ -58,36 +58,36 @@ describe("CompletenessScore Component", () => {
     const data = { a: "val1", b: "val2" };
     render(<CompletenessScore fields={fields} data={data} />);
 
-    expect(screen.getByText("100% complete")).toBeInTheDocument();
-    expect(screen.getByText("2/2 fields")).toBeInTheDocument();
+    expect(screen.getByText("100% สมบูรณ์")).toBeInTheDocument();
+    expect(screen.getByText("กรอกแล้ว 2/2 รายการ")).toBeInTheDocument();
   });
 
   it("treats empty string as not filled", () => {
     const fields = [makeField("a")];
     render(<CompletenessScore fields={fields} data={{ a: "" }} />);
 
-    expect(screen.getByText("0% complete")).toBeInTheDocument();
+    expect(screen.getByText("0% สมบูรณ์")).toBeInTheDocument();
   });
 
   it("treats null as not filled", () => {
     const fields = [makeField("a")];
     render(<CompletenessScore fields={fields} data={{ a: null }} />);
 
-    expect(screen.getByText("0% complete")).toBeInTheDocument();
+    expect(screen.getByText("0% สมบูรณ์")).toBeInTheDocument();
   });
 
   it("treats empty array as not filled", () => {
     const fields = [makeField("a", { type: "multiselect" })];
     render(<CompletenessScore fields={fields} data={{ a: [] }} />);
 
-    expect(screen.getByText("0% complete")).toBeInTheDocument();
+    expect(screen.getByText("0% สมบูรณ์")).toBeInTheDocument();
   });
 
   it("treats non-empty array as filled", () => {
     const fields = [makeField("a", { type: "multiselect" })];
     render(<CompletenessScore fields={fields} data={{ a: ["TV"] }} />);
 
-    expect(screen.getByText("100% complete")).toBeInTheDocument();
+    expect(screen.getByText("100% สมบูรณ์")).toBeInTheDocument();
   });
 
   it("treats boolean false as filled", () => {
@@ -95,14 +95,14 @@ describe("CompletenessScore Component", () => {
     render(<CompletenessScore fields={fields} data={{ a: false }} />);
 
     // false is a valid value, so should count as filled
-    expect(screen.getByText("100% complete")).toBeInTheDocument();
+    expect(screen.getByText("100% สมบูรณ์")).toBeInTheDocument();
   });
 
   it("treats number 0 as filled", () => {
     const fields = [makeField("a", { type: "number" })];
     render(<CompletenessScore fields={fields} data={{ a: 0 }} />);
 
-    expect(screen.getByText("100% complete")).toBeInTheDocument();
+    expect(screen.getByText("100% สมบูรณ์")).toBeInTheDocument();
   });
 
   it("ignores inactive fields", () => {
@@ -114,8 +114,8 @@ describe("CompletenessScore Component", () => {
     render(<CompletenessScore fields={fields} data={data} />);
 
     // only 1 active field, and it's filled = 100%
-    expect(screen.getByText("100% complete")).toBeInTheDocument();
-    expect(screen.getByText("1/1 fields")).toBeInTheDocument();
+    expect(screen.getByText("100% สมบูรณ์")).toBeInTheDocument();
+    expect(screen.getByText("กรอกแล้ว 1/1 รายการ")).toBeInTheDocument();
   });
 
   it("rounds percentage correctly", () => {
@@ -128,14 +128,14 @@ describe("CompletenessScore Component", () => {
     render(<CompletenessScore fields={fields} data={data} />);
 
     // 1/3 = 33.33... → Math.round → 33%
-    expect(screen.getByText("33% complete")).toBeInTheDocument();
+    expect(screen.getByText("33% สมบูรณ์")).toBeInTheDocument();
   });
 
   it("applies green color for >= 80%", () => {
     const fields = [makeField("a")];
     render(<CompletenessScore fields={fields} data={{ a: "filled" }} />);
 
-    const badge = screen.getByText("100% complete");
+    const badge = screen.getByText("100% สมบูรณ์");
     expect(badge.className).toContain("text-green-600");
   });
 
@@ -150,7 +150,7 @@ describe("CompletenessScore Component", () => {
       <CompletenessScore fields={fields} data={{ a: "x", b: "y" }} />
     );
 
-    const badge = screen.getByText("67% complete");
+    const badge = screen.getByText("67% สมบูรณ์");
     expect(badge.className).toContain("text-yellow-600");
   });
 
@@ -165,7 +165,7 @@ describe("CompletenessScore Component", () => {
       <CompletenessScore fields={fields} data={{ a: "x" }} />
     );
 
-    const badge = screen.getByText("33% complete");
+    const badge = screen.getByText("33% สมบูรณ์");
     expect(badge.className).toContain("text-red-600");
   });
 });

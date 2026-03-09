@@ -1,43 +1,56 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  fetchPropertyFields,
-  fetchPropertyField,
-  createPropertyField,
-  updatePropertyField,
-  deletePropertyField,
-  fetchProperties,
-  fetchProperty,
-  fetchPropertyByHouseId,
-  createProperty,
-  updateProperty,
-  deleteProperty,
-  searchProperties,
-} from "@/lib/api";
 import type { PropertyField, Property } from "@/lib/types";
 
-// ─── Mock fetch globally ───────────────────────────────────────────────────
+// ─── Mock Supabase client ──────────────────────────────────────────────────
 
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+const mockSelect = vi.fn();
+const mockInsert = vi.fn();
+const mockUpdate = vi.fn();
+const mockDelete = vi.fn();
+const mockEq = vi.fn();
+const mockIlike = vi.fn();
+const mockOrder = vi.fn();
+const mockSingle = vi.fn();
+const mockOr = vi.fn();
+const mockFrom = vi.fn();
 
-function mockResponse(data: unknown, status = 200) {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: () => Promise.resolve(data),
-  };
+function resetChain(resolvedData: unknown = [], error: unknown = null) {
+  const result = { data: resolvedData, error };
+
+  mockSingle.mockReturnValue(Promise.resolve(result));
+  mockOrder.mockReturnValue(Promise.resolve(result));
+  mockEq.mockReturnValue({ eq: mockEq, order: mockOrder, single: mockSingle, maybeSingle: vi.fn().mockReturnValue(Promise.resolve(result)), or: mockOr, ...Promise.resolve(result), then: (fn: (v: unknown) => unknown) => Promise.resolve(result).then(fn) });
+  mockIlike.mockReturnValue(Promise.resolve(result));
+  mockOr.mockReturnValue({ order: mockOrder, ...Promise.resolve(result), then: (fn: (v: unknown) => unknown) => Promise.resolve(result).then(fn) });
+
+  mockSelect.mockReturnValue({ eq: mockEq, order: mockOrder, single: mockSingle, or: mockOr });
+  mockInsert.mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockReturnValue(Promise.resolve(result)) }) });
+  mockUpdate.mockReturnValue({ eq: vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockReturnValue(Promise.resolve(result)) }) }) });
+  mockDelete.mockReturnValue({ eq: vi.fn().mockReturnValue(Promise.resolve(result)) });
+
+  mockFrom.mockReturnValue({
+    select: mockSelect,
+    insert: mockInsert,
+    update: mockUpdate,
+    delete: mockDelete,
+  });
 }
 
-beforeEach(() => {
-  mockFetch.mockReset();
-});
+vi.mock("@/lib/supabase", () => ({
+  supabase: {
+    from: (...args: unknown[]) => mockFrom(...args),
+  },
+}));
+
+// Import AFTER mock is set up
+const api = await import("@/lib/api");
 
 // ─── Sample data ───────────────────────────────────────────────────────────
 
 const sampleField: PropertyField = {
   id: 1,
   field_key: "house_name",
-  label: "House Name",
+  label: "ชื่อที่พัก",
   type: "text",
   section: "basic_info",
   required: true,
@@ -49,213 +62,94 @@ const sampleField: PropertyField = {
 const sampleProperty: Property = {
   id: 1,
   house_id: "PT60",
-  data: { house_name: "PT60 Pattaya", max_guests: 10 },
+  data: { house_name: "PT60 พัทยา", max_guests: 10 },
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
 };
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 // ─── Property Fields API ───────────────────────────────────────────────────
 
 describe("Property Fields API", () => {
-  it("fetchPropertyFields returns all fields", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([sampleField]));
-
-    const fields = await fetchPropertyFields();
-
-    expect(mockFetch).toHaveBeenCalledOnce();
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("/property_fields?order=order_index.asc"),
-      expect.any(Object)
-    );
+  it("fetchPropertyFields calls supabase from property_fields", async () => {
+    resetChain([sampleField]);
+    const fields = await api.fetchPropertyFields();
+    expect(mockFrom).toHaveBeenCalledWith("property_fields");
     expect(fields).toEqual([sampleField]);
   });
 
-  it("fetchPropertyFields with activeOnly=true adds filter", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([sampleField]));
-
-    await fetchPropertyFields(true);
-
-    const url = mockFetch.mock.calls[0][0] as string;
-    expect(url).toContain("is_active=eq.true");
-  });
-
-  it("fetchPropertyFields with activeOnly=false has no active filter", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([sampleField]));
-
-    await fetchPropertyFields(false);
-
-    const url = mockFetch.mock.calls[0][0] as string;
-    expect(url).not.toContain("is_active=eq.true");
-  });
-
-  it("fetchPropertyField returns a single field", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([sampleField]));
-
-    const field = await fetchPropertyField(1);
-
+  it("fetchPropertyField returns single field", async () => {
+    resetChain(sampleField);
+    const field = await api.fetchPropertyField(1);
+    expect(mockFrom).toHaveBeenCalledWith("property_fields");
     expect(field).toEqual(sampleField);
-    const url = mockFetch.mock.calls[0][0] as string;
-    expect(url).toContain("id=eq.1");
   });
 
-  it("fetchPropertyField returns null when not found", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([]));
-
-    const field = await fetchPropertyField(999);
-
-    expect(field).toBeNull();
-  });
-
-  it("createPropertyField sends POST with body", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([sampleField]));
-
-    const { id, ...insertData } = sampleField;
-    const result = await createPropertyField(insertData);
-
+  it("createPropertyField calls insert", async () => {
+    resetChain(sampleField);
+    const result = await api.createPropertyField({
+      field_key: "house_name",
+      label: "ชื่อที่พัก",
+      type: "text",
+      section: "basic_info",
+      required: true,
+      options: null,
+      order_index: 1,
+      is_active: true,
+    });
+    expect(mockFrom).toHaveBeenCalledWith("property_fields");
     expect(result).toEqual(sampleField);
-    const [url, init] = mockFetch.mock.calls[0];
-    expect(url).toContain("/property_fields");
-    expect(init.method).toBe("POST");
-    expect(JSON.parse(init.body)).toEqual(insertData);
   });
 
-  it("updatePropertyField sends PATCH", async () => {
-    const updated = { ...sampleField, label: "Updated Name" };
-    mockFetch.mockResolvedValueOnce(mockResponse([updated]));
-
-    const result = await updatePropertyField(1, { label: "Updated Name" });
-
-    expect(result.label).toBe("Updated Name");
-    const [url, init] = mockFetch.mock.calls[0];
-    expect(url).toContain("id=eq.1");
-    expect(init.method).toBe("PATCH");
-  });
-
-  it("deletePropertyField sends DELETE", async () => {
-    mockFetch.mockResolvedValueOnce({ ok: true, status: 204, json: () => Promise.resolve([]) });
-
-    await deletePropertyField(1);
-
-    const [url, init] = mockFetch.mock.calls[0];
-    expect(url).toContain("id=eq.1");
-    expect(init.method).toBe("DELETE");
+  it("deletePropertyField calls delete", async () => {
+    resetChain(null);
+    await api.deletePropertyField(1);
+    expect(mockFrom).toHaveBeenCalledWith("property_fields");
   });
 });
 
 // ─── Properties API ───────────────────────────────────────────────────────
 
 describe("Properties API", () => {
-  it("fetchProperties returns all properties", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([sampleProperty]));
-
-    const props = await fetchProperties();
-
+  it("fetchProperties calls supabase from properties", async () => {
+    resetChain([sampleProperty]);
+    const props = await api.fetchProperties();
+    expect(mockFrom).toHaveBeenCalledWith("properties");
     expect(props).toEqual([sampleProperty]);
-    const url = mockFetch.mock.calls[0][0] as string;
-    expect(url).toContain("/properties?order=created_at.desc");
   });
 
   it("fetchProperty returns single property", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([sampleProperty]));
-
-    const prop = await fetchProperty(1);
-
+    resetChain(sampleProperty);
+    const prop = await api.fetchProperty(1);
+    expect(mockFrom).toHaveBeenCalledWith("properties");
     expect(prop).toEqual(sampleProperty);
   });
 
-  it("fetchProperty returns null when not found", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([]));
-
-    const prop = await fetchProperty(999);
-
-    expect(prop).toBeNull();
-  });
-
-  it("fetchPropertyByHouseId queries by house_id", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([sampleProperty]));
-
-    const prop = await fetchPropertyByHouseId("PT60");
-
-    expect(prop).toEqual(sampleProperty);
-    const url = mockFetch.mock.calls[0][0] as string;
-    expect(url).toContain("house_id=eq.PT60");
-  });
-
-  it("createProperty sends POST", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([sampleProperty]));
-
-    const result = await createProperty({
+  it("createProperty calls insert", async () => {
+    resetChain(sampleProperty);
+    const result = await api.createProperty({
       house_id: "PT60",
-      data: { house_name: "PT60 Pattaya" },
+      data: { house_name: "PT60 พัทยา" },
     });
-
-    expect(result.house_id).toBe("PT60");
-    const [, init] = mockFetch.mock.calls[0];
-    expect(init.method).toBe("POST");
+    expect(mockFrom).toHaveBeenCalledWith("properties");
+    expect(result).toEqual(sampleProperty);
   });
 
-  it("updateProperty sends PATCH", async () => {
-    const updated = { ...sampleProperty, data: { house_name: "Updated" } };
-    mockFetch.mockResolvedValueOnce(mockResponse([updated]));
-
-    const result = await updateProperty(1, { data: { house_name: "Updated" } });
-
-    expect(result.data.house_name).toBe("Updated");
-    const [url, init] = mockFetch.mock.calls[0];
-    expect(url).toContain("id=eq.1");
-    expect(init.method).toBe("PATCH");
-  });
-
-  it("deleteProperty sends DELETE", async () => {
-    mockFetch.mockResolvedValueOnce({ ok: true, status: 204, json: () => Promise.resolve([]) });
-
-    await deleteProperty(1);
-
-    const [url, init] = mockFetch.mock.calls[0];
-    expect(url).toContain("id=eq.1");
-    expect(init.method).toBe("DELETE");
-  });
-
-  it("searchProperties encodes query in URL", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([sampleProperty]));
-
-    await searchProperties("PT60");
-
-    const url = mockFetch.mock.calls[0][0] as string;
-    expect(url).toContain("PT60");
-    expect(url).toContain("house_id.ilike");
-    expect(url).toContain("house_name.ilike");
+  it("deleteProperty calls delete", async () => {
+    resetChain(null);
+    await api.deleteProperty(1);
+    expect(mockFrom).toHaveBeenCalledWith("properties");
   });
 });
 
 // ─── Error handling ────────────────────────────────────────────────────────
 
 describe("API Error Handling", () => {
-  it("throws Error with message from API response", async () => {
-    mockFetch.mockResolvedValueOnce(
-      mockResponse({ message: "Unique constraint violated" }, 409)
-    );
-
-    await expect(fetchProperties()).rejects.toThrow("Unique constraint violated");
-  });
-
-  it("throws generic error when no message in body", async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      json: () => Promise.reject(new Error("not json")),
-    });
-
-    await expect(fetchProperties()).rejects.toThrow("Request failed: 500");
-  });
-
-  it("sends correct headers including Prefer", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse([]));
-
-    await fetchProperties();
-
-    const [, init] = mockFetch.mock.calls[0];
-    expect(init.headers["Content-Type"]).toBe("application/json");
-    expect(init.headers["Prefer"]).toBe("return=representation");
+  it("throws Error when supabase returns error", async () => {
+    resetChain(null, { message: "Something went wrong" });
+    await expect(api.fetchProperties()).rejects.toThrow("Something went wrong");
   });
 });

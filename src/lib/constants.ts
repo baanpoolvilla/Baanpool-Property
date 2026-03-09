@@ -3,23 +3,26 @@ import { SectionConfig } from "./types";
 // ─── Section definitions (display order & labels) ──────────────────────────
 
 export const SECTIONS: SectionConfig[] = [
-  { key: "basic_info", label: "Basic Information", icon: "info", order: 0 },
-  { key: "location", label: "Location", icon: "map-pin", order: 1 },
-  { key: "capacity", label: "Capacity & Rooms", icon: "users", order: 2 },
-  { key: "facilities", label: "Facilities", icon: "building", order: 3 },
-  { key: "parking", label: "Parking", icon: "car", order: 4 },
-  { key: "pool_outdoor", label: "Pool & Outdoor", icon: "waves", order: 5 },
-  { key: "pricing", label: "Pricing", icon: "banknote", order: 6 },
-  { key: "utilities", label: "Utilities & Hours", icon: "zap", order: 7 },
-  { key: "rules", label: "Rules & Policies", icon: "shield", order: 8 },
-  { key: "contact", label: "Contact & Management", icon: "phone", order: 9 },
+  { key: "basic_info", label: "ข้อมูลทั่วไป", icon: "info", order: 0 },
+  { key: "location", label: "ที่ตั้ง / แผนที่", icon: "map-pin", order: 1 },
+  { key: "rooms", label: "ห้องนอน / ห้องน้ำ", icon: "bed", order: 2 },
+  { key: "capacity", label: "ความจุ / พื้นที่ใช้สอย", icon: "users", order: 3 },
+  { key: "pool", label: "สระว่ายน้ำ", icon: "waves", order: 4 },
+  { key: "parking", label: "ที่จอดรถ", icon: "car", order: 5 },
+  { key: "facilities", label: "สิ่งอำนวยความสะดวก", icon: "building", order: 6 },
+  { key: "equipment", label: "เครื่องใช้ / อุปกรณ์เสริม", icon: "wrench", order: 7 },
+  { key: "pricing", label: "ราคา / ค่าบริการ", icon: "banknote", order: 8 },
+  { key: "utilities", label: "สาธารณูปโภค / ค่าใช้จ่าย", icon: "zap", order: 9 },
+  { key: "rules", label: "กฎ / ข้อปฏิบัติ", icon: "shield", order: 10 },
+  { key: "time_rules", label: "เวลา / เสียง / แสงไฟ", icon: "clock", order: 11 },
+  { key: "contact", label: "ผู้ดูแล / ติดต่อ", icon: "phone", order: 12 },
 ];
 
 export const FIELD_TYPES = [
-  { value: "text", label: "Text" },
-  { value: "number", label: "Number" },
-  { value: "boolean", label: "Boolean (Switch)" },
-  { value: "select", label: "Select (Dropdown)" },
-  { value: "textarea", label: "Textarea" },
-  { value: "multiselect", label: "Multi-select" },
+  { value: "text", label: "ข้อความ" },
+  { value: "number", label: "ตัวเลข" },
+  { value: "boolean", label: "เปิด/ปิด (สวิตช์)" },
+  { value: "select", label: "ตัวเลือกเดียว (Dropdown)" },
+  { value: "textarea", label: "ข้อความยาว" },
+  { value: "multiselect", label: "เลือกได้หลายรายการ" },
 ] as const;

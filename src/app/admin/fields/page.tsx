@@ -93,7 +93,7 @@ export default function FieldManagementPage() {
       const data = await fetchPropertyFields(false);
       setFields(data);
     } catch {
-      toast.error("Failed to load fields");
+      toast.error("ไม่สามารถโหลดฟิลด์ได้");
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,7 @@ export default function FieldManagementPage() {
 
   const handleSubmit = async () => {
     if (!form.field_key.trim() || !form.label.trim()) {
-      toast.error("Field key and label are required.");
+      toast.error("กรุณากรอก Field Key และ Label");
       return;
     }
 
@@ -147,7 +147,7 @@ export default function FieldManagementPage() {
       : null;
 
     if (needsOptions && (!parsedOptions || parsedOptions.length === 0)) {
-      toast.error("Please provide at least one option (comma-separated).");
+      toast.error("กรุณาใส่ตัวเลือกอย่างน้อย 1 รายการ (คั่นด้วยเครื่องหมายจุลภาค)");
       return;
     }
 
@@ -161,16 +161,16 @@ export default function FieldManagementPage() {
 
       if (editingId) {
         await updatePropertyField(editingId, payload);
-        toast.success("Field updated");
+        toast.success("อัปเดตฟิลด์แล้ว");
       } else {
         await createPropertyField(payload);
-        toast.success("Field created");
+        toast.success("สร้างฟิลด์แล้ว");
       }
 
       setDialogOpen(false);
       load();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save field");
+      toast.error(err instanceof Error ? err.message : "ไม่สามารถบันทึกฟิลด์ได้");
     } finally {
       setSubmitting(false);
     }
@@ -183,7 +183,7 @@ export default function FieldManagementPage() {
       await updatePropertyField(field.id, { is_active: !field.is_active });
       load();
     } catch {
-      toast.error("Failed to update field");
+      toast.error("ไม่สามารถอัปเดตฟิลด์ได้");
     }
   };
 
@@ -192,10 +192,10 @@ export default function FieldManagementPage() {
   const handleDelete = async (id: number) => {
     try {
       await deletePropertyField(id);
-      toast.success("Field deleted");
+      toast.success("ลบฟิลด์แล้ว");
       load();
     } catch {
-      toast.error("Failed to delete field");
+      toast.error("ไม่สามารถลบฟิลด์ได้");
     }
   };
 
@@ -209,15 +209,15 @@ export default function FieldManagementPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
               <Settings2 className="h-6 w-6" />
-              Field Management
+              จัดการฟิลด์
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Define property fields — changes reflect immediately in property forms
+              กำหนดฟิลด์ข้อมูลที่พัก — การเปลี่ยนแปลงจะแสดงผลในฟอร์มทันที
             </p>
           </div>
           <Button onClick={openCreate} className="gap-2">
             <Plus className="h-4 w-4" />
-            Add Field
+            เพิ่มฟิลด์
           </Button>
         </div>
 
@@ -225,7 +225,7 @@ export default function FieldManagementPage() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">
-              Field Definitions
+              รายการฟิลด์ทั้งหมด
               <Badge variant="secondary" className="ml-2">
                 {fields.length}
               </Badge>
@@ -239,9 +239,9 @@ export default function FieldManagementPage() {
             ) : fields.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground">
                 <Settings2 className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                <p>No fields defined yet</p>
+                <p>ยังไม่มีฟิลด์</p>
                 <Button variant="link" onClick={openCreate} className="mt-2">
-                  Create your first field
+                  สร้างฟิลด์แรก
                 </Button>
               </div>
             ) : (
@@ -251,16 +251,16 @@ export default function FieldManagementPage() {
                     <TableRow>
                       <TableHead className="w-10">#</TableHead>
                       <TableHead>Field Key</TableHead>
-                      <TableHead>Label</TableHead>
-                      <TableHead>Type</TableHead>
+                      <TableHead>ป้ายกำกับ</TableHead>
+                      <TableHead>ประเภท</TableHead>
                       <TableHead className="hidden md:table-cell">
-                        Section
+                        หมวดหมู่
                       </TableHead>
                       <TableHead className="hidden lg:table-cell">
-                        Required
+                        จำเป็น
                       </TableHead>
-                      <TableHead>Active</TableHead>
-                      <TableHead className="text-right w-24">Actions</TableHead>
+                      <TableHead>เปิดใช้</TableHead>
+                      <TableHead className="text-right w-24">จัดการ</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -286,10 +286,10 @@ export default function FieldManagementPage() {
                         <TableCell className="hidden lg:table-cell">
                           {f.required ? (
                             <Badge className="bg-amber-100 text-amber-800 border-amber-200">
-                              Yes
+                              ใช่
                             </Badge>
                           ) : (
-                            <span className="text-muted-foreground">No</span>
+                            <span className="text-muted-foreground">ไม่</span>
                           )}
                         </TableCell>
                         <TableCell>
@@ -322,23 +322,21 @@ export default function FieldManagementPage() {
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>
-                                    Delete Field
+                                    ลบฟิลด์
                                   </AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Delete{" "}
+                                    ลบ{" "}
                                     <strong>{f.label}</strong> ({f.field_key})?
-                                    Existing property data using this field
-                                    won&apos;t be removed, but the field will no
-                                    longer appear in forms.
+                                    ข้อมูลที่พักเดิมจะยังอยู่ แต่ฟิลด์นี้จะไม่แสดงในฟอร์มอีกต่อไป
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
                                   <AlertDialogAction
                                     onClick={() => handleDelete(f.id)}
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
-                                    Delete
+                                    ลบ
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
@@ -361,7 +359,7 @@ export default function FieldManagementPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editingId ? "Edit Field" : "New Field"}
+              {editingId ? "แก้ไขฟิลด์" : "เพิ่มฟิลด์ใหม่"}
             </DialogTitle>
           </DialogHeader>
 
@@ -375,30 +373,30 @@ export default function FieldManagementPage() {
                 onChange={(e) =>
                   setForm((p) => ({ ...p, field_key: e.target.value }))
                 }
-                placeholder="e.g. karaoke"
+                placeholder="เช่น karaoke"
                 className="font-mono"
               />
               <p className="text-xs text-muted-foreground">
-                Lowercase, underscores only. Used as JSON key.
+                ตัวอักษรพิมพ์เล็ก ขีดล่างเท่านั้น ใช้เป็น JSON key
               </p>
             </div>
 
             {/* Label */}
             <div className="space-y-2">
-              <Label htmlFor="fl">Label</Label>
+              <Label htmlFor="fl">ป้ายกำกับ (Label)</Label>
               <Input
                 id="fl"
                 value={form.label}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, label: e.target.value }))
                 }
-                placeholder="e.g. Karaoke System"
+                placeholder="เช่น ระบบคาราโอเกะ"
               />
             </div>
 
             {/* Type */}
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>ประเภท</Label>
               <Select
                 value={form.type}
                 onValueChange={(v) => {
@@ -421,19 +419,19 @@ export default function FieldManagementPage() {
             {/* Options (only for select / multiselect) */}
             {(form.type === "select" || form.type === "multiselect") && (
               <div className="space-y-2">
-                <Label htmlFor="opts">Options (comma-separated)</Label>
+                <Label htmlFor="opts">ตัวเลือก (คั่นด้วยเครื่องหมายจุลภาค)</Label>
                 <Input
                   id="opts"
                   value={optionsInput}
                   onChange={(e) => setOptionsInput(e.target.value)}
-                  placeholder="Option A, Option B, Option C"
+                  placeholder="ตัวเลือก A, ตัวเลือก B, ตัวเลือก C"
                 />
               </div>
             )}
 
             {/* Section */}
             <div className="space-y-2">
-              <Label>Section</Label>
+              <Label>หมวดหมู่</Label>
               <Select
                 value={form.section}
                 onValueChange={(v) =>
@@ -455,7 +453,7 @@ export default function FieldManagementPage() {
 
             {/* Order */}
             <div className="space-y-2">
-              <Label htmlFor="oi">Order Index</Label>
+              <Label htmlFor="oi">ลำดับ</Label>
               <Input
                 id="oi"
                 type="number"
@@ -479,7 +477,7 @@ export default function FieldManagementPage() {
                     setForm((p) => ({ ...p, required: c }))
                   }
                 />
-                <Label htmlFor="req">Required</Label>
+                <Label htmlFor="req">จำเป็น</Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch
@@ -489,7 +487,7 @@ export default function FieldManagementPage() {
                     setForm((p) => ({ ...p, is_active: c }))
                   }
                 />
-                <Label htmlFor="act">Active</Label>
+                <Label htmlFor="act">เปิดใช้</Label>
               </div>
             </div>
           </div>
@@ -499,10 +497,10 @@ export default function FieldManagementPage() {
               variant="outline"
               onClick={() => setDialogOpen(false)}
             >
-              Cancel
+              ยกเลิก
             </Button>
             <Button onClick={handleSubmit} disabled={submitting}>
-              {submitting ? "Saving…" : editingId ? "Update" : "Create"}
+              {submitting ? "กำลังบันทึก…" : editingId ? "อัปเดต" : "สร้าง"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -35,7 +35,7 @@ describe("DynamicField Component", () => {
       render(<DynamicField field={field} value="" onChange={onChange} />);
 
       expect(screen.getByLabelText("House Name")).toBeInTheDocument();
-      expect(screen.getByPlaceholderText("Enter house name")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("กรุณากรอกHouse Name")).toBeInTheDocument();
     });
 
     it("displays the value", () => {

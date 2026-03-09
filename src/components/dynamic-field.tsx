@@ -37,7 +37,7 @@ export function DynamicField({ field, value, onChange }: DynamicFieldProps) {
             type="text"
             value={(value as string) ?? ""}
             onChange={(e) => onChange(field.field_key, e.target.value)}
-            placeholder={`Enter ${field.label.toLowerCase()}`}
+            placeholder={`กรุณากรอก${field.label}`}
           />
         </div>
       );
@@ -57,7 +57,7 @@ export function DynamicField({ field, value, onChange }: DynamicFieldProps) {
               const v = e.target.value;
               onChange(field.field_key, v === "" ? null : Number(v));
             }}
-            placeholder={`Enter ${field.label.toLowerCase()}`}
+            placeholder={`กรุณากรอก${field.label}`}
           />
         </div>
       );
@@ -89,7 +89,7 @@ export function DynamicField({ field, value, onChange }: DynamicFieldProps) {
             onValueChange={(v) => onChange(field.field_key, v ?? "")}
           >
             <SelectTrigger id={id} className="w-full">
-              <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+              <SelectValue placeholder={`เลือก${field.label}`} />
             </SelectTrigger>
             <SelectContent>
               {(field.options ?? []).map((opt) => (
@@ -113,7 +113,7 @@ export function DynamicField({ field, value, onChange }: DynamicFieldProps) {
             id={id}
             value={(value as string) ?? ""}
             onChange={(e) => onChange(field.field_key, e.target.value)}
-            placeholder={`Enter ${field.label.toLowerCase()}`}
+            placeholder={`กรุณากรอก${field.label}`}
             rows={3}
           />
         </div>

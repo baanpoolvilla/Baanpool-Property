@@ -1,16 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { SECTIONS, FIELD_TYPES, POSTGREST_URL } from "@/lib/constants";
+import { SECTIONS, FIELD_TYPES } from "@/lib/constants";
 
 describe("Constants", () => {
-  describe("POSTGREST_URL", () => {
-    it("defaults to localhost:3001", () => {
-      expect(POSTGREST_URL).toBe("http://localhost:3001");
-    });
-  });
-
   describe("SECTIONS", () => {
-    it("has 6 sections", () => {
-      expect(SECTIONS).toHaveLength(6);
+    it("has 13 sections", () => {
+      expect(SECTIONS).toHaveLength(13);
     });
 
     it("has unique keys", () => {
@@ -28,10 +22,17 @@ describe("Constants", () => {
       const keys = SECTIONS.map((s) => s.key);
       expect(keys).toContain("basic_info");
       expect(keys).toContain("location");
+      expect(keys).toContain("rooms");
       expect(keys).toContain("capacity");
+      expect(keys).toContain("pool");
+      expect(keys).toContain("parking");
       expect(keys).toContain("facilities");
+      expect(keys).toContain("equipment");
       expect(keys).toContain("pricing");
+      expect(keys).toContain("utilities");
       expect(keys).toContain("rules");
+      expect(keys).toContain("time_rules");
+      expect(keys).toContain("contact");
     });
 
     it("each section has required properties", () => {

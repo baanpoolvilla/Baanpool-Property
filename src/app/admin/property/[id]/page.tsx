@@ -19,6 +19,9 @@ import {
   Waves,
   Zap,
   Phone,
+  Bed,
+  Wrench,
+  Clock,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -55,13 +58,16 @@ import { Separator } from "@/components/ui/separator";
 const sectionIcons: Record<string, React.ReactNode> = {
   basic_info: <Info className="h-4 w-4" />,
   location: <MapPin className="h-4 w-4" />,
+  rooms: <Bed className="h-4 w-4" />,
   capacity: <Users className="h-4 w-4" />,
-  facilities: <Building className="h-4 w-4" />,
+  pool: <Waves className="h-4 w-4" />,
   parking: <Car className="h-4 w-4" />,
-  pool_outdoor: <Waves className="h-4 w-4" />,
+  facilities: <Building className="h-4 w-4" />,
+  equipment: <Wrench className="h-4 w-4" />,
   pricing: <Banknote className="h-4 w-4" />,
   utilities: <Zap className="h-4 w-4" />,
   rules: <Shield className="h-4 w-4" />,
+  time_rules: <Clock className="h-4 w-4" />,
   contact: <Phone className="h-4 w-4" />,
 };
 
@@ -98,11 +104,11 @@ export default function PropertyFormPage() {
           // enable auto-save after initial load
           setTimeout(() => setAutoSaveEnabled(true), 1000);
         } else {
-          toast.error("Property not found");
+          toast.error("ไม่พบที่พัก");
           router.push("/admin");
         }
       } catch {
-        toast.error("Failed to load property");
+        toast.error("ไม่สามารถโหลดที่พักได้");
       } finally {
         setLoadingProp(false);
       }
@@ -186,13 +192,13 @@ export default function PropertyFormPage() {
     );
     if (missing.length > 0) {
       toast.error(
-        `Missing required fields: ${missing.map((f) => f.label).join(", ")}`
+        `กรุณากรอกข้อมูลที่จำเป็น: ${missing.map((f) => f.label).join(", ")}`
       );
       return;
     }
 
     if (!houseId.trim()) {
-      toast.error("House ID is required");
+      toast.error("กรุณากรอกรหัสบ้าน");
       return;
     }
 
@@ -203,18 +209,18 @@ export default function PropertyFormPage() {
           house_id: houseId.trim(),
           data,
         });
-        toast.success("Property created!");
+        toast.success("สร้างที่พักเรียบร้อย!");
         router.push(`/admin/property/${created.id}`);
       } else if (propertyId) {
         await updateProperty(propertyId, {
           house_id: houseId.trim(),
           data,
         });
-        toast.success("Property saved!");
+        toast.success("บันทึกเรียบร้อย!");
       }
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to save property"
+        err instanceof Error ? err.message : "ไม่สามารถบันทึกได้"
       );
     } finally {
       setSubmitting(false);
@@ -235,12 +241,12 @@ export default function PropertyFormPage() {
           </Link>
           <div className="flex-1">
             <h1 className="text-2xl font-bold tracking-tight">
-              {isNew ? "New Property" : `Edit ${houseId || "Property"}`}
+              {isNew ? "เพิ่มที่พักใหม่" : `แก้ไข ${houseId || "ที่พัก"}`}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
               {isNew
-                ? "Create a new property listing"
-                : "Update property details"}
+                ? "กรอกรายละเอียดที่พักเพื่อสร้างรายการใหม่"
+                : "แก้ไขรายละเอียดที่พัก"}
             </p>
           </div>
           {/* Auto-save indicator */}
@@ -249,11 +255,11 @@ export default function PropertyFormPage() {
               {autoSaving && (
                 <span className="flex items-center gap-1">
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  Saving…
+                  กำลังบันทึก…
                 </span>
               )}
               {lastSaved && !autoSaving && (
-                <span>Saved {lastSaved.toLocaleTimeString()}</span>
+                <span>บันทึกล่าสุด {lastSaved.toLocaleTimeString()}</span>
               )}
             </div>
           )}
@@ -275,19 +281,19 @@ export default function PropertyFormPage() {
             {/* House ID */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Identification</CardTitle>
+                <CardTitle className="text-base">ข้อมูลระบุตัวตน</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <Label htmlFor="house_id">
-                    House ID
+                    รหัสบ้าน
                     <span className="text-destructive ml-1">*</span>
                   </Label>
                   <Input
                     id="house_id"
                     value={houseId}
                     onChange={(e) => setHouseId(e.target.value)}
-                    placeholder="e.g. PT60"
+                    placeholder="เช่น PT60"
                     className="max-w-xs font-mono"
                     required
                   />
@@ -355,7 +361,7 @@ export default function PropertyFormPage() {
             <div className="flex items-center justify-end gap-3 pt-2">
               <Link href="/admin">
                 <Button type="button" variant="outline">
-                  Cancel
+                  ยกเลิก
                 </Button>
               </Link>
               <Button type="submit" disabled={submitting} className="gap-2">
@@ -364,7 +370,7 @@ export default function PropertyFormPage() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {isNew ? "Create Property" : "Save Changes"}
+                {isNew ? "สร้างที่พัก" : "บันทึก"}
               </Button>
             </div>
           </form>
