@@ -1,4 +1,4 @@
-import { POSTGREST_URL } from "./constants";
+import { supabase } from "./supabase";
 import type {
   Property,
   PropertyField,
@@ -8,131 +8,159 @@ import type {
   PropertyUpdate,
 } from "./types";
 
-// ─── Generic helpers ───────────────────────────────────────────────────────
-
-async function request<T>(
-  path: string,
-  init?: RequestInit
-): Promise<T> {
-  const url = `${POSTGREST_URL}${path}`;
-  const res = await fetch(url, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-      ...init?.headers,
-    },
-  });
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.message ?? `Request failed: ${res.status}`);
-  }
-
-  // 204 No Content
-  if (res.status === 204) return [] as unknown as T;
-
-  return res.json();
-}
-
 // ─── Property Fields ───────────────────────────────────────────────────────
 
 export async function fetchPropertyFields(
   activeOnly = false
 ): Promise<PropertyField[]> {
-  const filter = activeOnly ? "&is_active=eq.true" : "";
-  return request<PropertyField[]>(
-    `/property_fields?order=order_index.asc${filter}`
-  );
+  let query = supabase
+    .from("property_fields")
+    .select("*")
+    .order("order_index", { ascending: true });
+
+  if (activeOnly) {
+    query = query.eq("is_active", true);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return data as PropertyField[];
 }
 
 export async function fetchPropertyField(
   id: number
 ): Promise<PropertyField | null> {
-  const rows = await request<PropertyField[]>(
-    `/property_fields?id=eq.${id}`
-  );
-  return rows[0] ?? null;
+  const { data, error } = await supabase
+    .from("property_fields")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data as PropertyField | null;
 }
 
 export async function createPropertyField(
   data: PropertyFieldInsert
 ): Promise<PropertyField> {
-  const rows = await request<PropertyField[]>("/property_fields", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-  return rows[0];
+  const { data: result, error } = await supabase
+    .from("property_fields")
+    .insert(data)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return result as PropertyField;
 }
 
 export async function updatePropertyField(
   id: number,
   data: PropertyFieldUpdate
 ): Promise<PropertyField> {
-  const rows = await request<PropertyField[]>(
-    `/property_fields?id=eq.${id}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify(data),
-    }
-  );
-  return rows[0];
+  const { data: result, error } = await supabase
+    .from("property_fields")
+    .update(data)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return result as PropertyField;
 }
 
 export async function deletePropertyField(id: number): Promise<void> {
-  await request(`/property_fields?id=eq.${id}`, { method: "DELETE" });
+  const { error } = await supabase
+    .from("property_fields")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
 }
 
 // ─── Properties ────────────────────────────────────────────────────────────
 
 export async function fetchProperties(): Promise<Property[]> {
-  return request<Property[]>("/properties?order=created_at.desc");
+  const { data, error } = await supabase
+    .from("properties")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data as Property[];
 }
 
 export async function fetchProperty(id: number): Promise<Property | null> {
-  const rows = await request<Property[]>(`/properties?id=eq.${id}`);
-  return rows[0] ?? null;
+  const { data, error } = await supabase
+    .from("properties")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data as Property | null;
 }
 
 export async function fetchPropertyByHouseId(
   houseId: string
 ): Promise<Property | null> {
-  const rows = await request<Property[]>(
-    `/properties?house_id=eq.${houseId}`
-  );
-  return rows[0] ?? null;
+  const { data, error } = await supabase
+    .from("properties")
+    .select("*")
+    .eq("house_id", houseId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data as Property | null;
 }
 
 export async function createProperty(
   data: PropertyInsert
 ): Promise<Property> {
-  const rows = await request<Property[]>("/properties", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-  return rows[0];
+  const { data: result, error } = await supabase
+    .from("properties")
+    .insert(data)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return result as Property;
 }
 
 export async function updateProperty(
   id: number,
   data: PropertyUpdate
 ): Promise<Property> {
-  const rows = await request<Property[]>(`/properties?id=eq.${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
-  return rows[0];
+  const { data: result, error } = await supabase
+    .from("properties")
+    .update(data)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return result as Property;
 }
 
 export async function deleteProperty(id: number): Promise<void> {
-  await request(`/properties?id=eq.${id}`, { method: "DELETE" });
+  const { error } = await supabase
+    .from("properties")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
 }
 
 export async function searchProperties(
   query: string
 ): Promise<Property[]> {
-  // Search by house_id or within JSONB data
-  return request<Property[]>(
-    `/properties?or=(house_id.ilike.*${encodeURIComponent(query)}*,data->>house_name.ilike.*${encodeURIComponent(query)}*)&order=created_at.desc`
-  );
+  const pattern = `%${query}%`;
+
+  const { data, error } = await supabase
+    .from("properties")
+    .select("*")
+    .or(`house_id.ilike.${pattern},data->>house_name.ilike.${pattern}`)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data as Property[];
 }

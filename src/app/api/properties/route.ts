@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
-const POSTGREST_URL =
-  process.env.POSTGREST_URL ?? "http://localhost:3001";
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
+);
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -9,24 +12,19 @@ export async function GET(request: NextRequest) {
   const format = searchParams.get("format") ?? "json";
 
   try {
-    // Fetch properties from PostgREST
-    const url = houseId
-      ? `${POSTGREST_URL}/properties?house_id=eq.${encodeURIComponent(houseId)}`
-      : `${POSTGREST_URL}/properties?order=created_at.desc`;
+    let query = supabase
+      .from("properties")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    const res = await fetch(url, {
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      return NextResponse.json(
-        { error: "Failed to fetch properties" },
-        { status: res.status }
-      );
+    if (houseId) {
+      query = query.eq("house_id", houseId);
     }
 
-    const properties = await res.json();
+    const { data: properties, error } = await query;
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
     // Flatten data for export
     const flattened = properties.map(

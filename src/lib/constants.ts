@@ -1,8 +1,5 @@
 import { SectionConfig } from "./types";
 
-// API base URL — calls go through Next.js API proxy to avoid CORS/mixed-content
-export const POSTGREST_URL = "/api/postgrest";
-
 // ─── Section definitions (display order & labels) ──────────────────────────
 
 export const SECTIONS: SectionConfig[] = [
