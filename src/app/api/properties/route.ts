@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const POSTGREST_URL =
-  process.env.NEXT_PUBLIC_POSTGREST_URL ?? "http://localhost:3001";
+  process.env.POSTGREST_URL ?? "http://localhost:3001";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;

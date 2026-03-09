@@ -1,8 +1,7 @@
 import { SectionConfig } from "./types";
 
-// PostgREST base URL — override via env var
-export const POSTGREST_URL =
-  process.env.NEXT_PUBLIC_POSTGREST_URL ?? "http://localhost:3001";
+// API base URL — calls go through Next.js API proxy to avoid CORS/mixed-content
+export const POSTGREST_URL = "/api/postgrest";
 
 // ─── Section definitions (display order & labels) ──────────────────────────
 
