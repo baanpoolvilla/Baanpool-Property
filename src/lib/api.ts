@@ -6,6 +6,9 @@ import type {
   PropertyFieldUpdate,
   PropertyInsert,
   PropertyUpdate,
+  PropertyNote,
+  PropertyNoteInsert,
+  PropertyNoteUpdate,
 } from "./types";
 
 // ─── Property Fields ───────────────────────────────────────────────────────
@@ -163,4 +166,56 @@ export async function searchProperties(
 
   if (error) throw new Error(error.message);
   return data as Property[];
+}
+
+// ─── Property Notes ────────────────────────────────────────────────────────
+
+export async function fetchPropertyNotes(
+  propertyId: number
+): Promise<PropertyNote[]> {
+  const { data, error } = await supabase
+    .from("property_notes")
+    .select("*")
+    .eq("property_id", propertyId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data as PropertyNote[];
+}
+
+export async function createPropertyNote(
+  data: PropertyNoteInsert
+): Promise<PropertyNote> {
+  const { data: result, error } = await supabase
+    .from("property_notes")
+    .insert(data)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return result as PropertyNote;
+}
+
+export async function updatePropertyNote(
+  id: number,
+  data: PropertyNoteUpdate
+): Promise<PropertyNote> {
+  const { data: result, error } = await supabase
+    .from("property_notes")
+    .update(data)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return result as PropertyNote;
+}
+
+export async function deletePropertyNote(id: number): Promise<void> {
+  const { error } = await supabase
+    .from("property_notes")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
 }

@@ -34,7 +34,13 @@ INSERT INTO property_fields (field_key, label, type, section, required, options,
 ('google_maps_url', 'ลิงก์ Google Maps', 'text', 'location', false, NULL, 14, true),
 ('nearby_landmarks', 'สถานที่ใกล้เคียง', 'textarea', 'location', false, NULL, 15, true),
 ('distance_to_city_km', 'ระยะห่างจากตัวเมือง (กม.)', 'number', 'location', false, NULL, 16, true),
-('distance_to_airport_km', 'ระยะห่างจากสนามบิน (กม.)', 'number', 'location', false, NULL, 17, true);
+('distance_to_airport_km', 'ระยะห่างจากสนามบิน (กม.)', 'number', 'location', false, NULL, 17, true),
+('near_beach', 'ติดทะเล / ใกล้ทะเล', 'boolean', 'location', false, NULL, 18, true),
+('beach_name', 'ชื่อหาด / ชายทะเลใกล้เคียง', 'text', 'location', false, NULL, 19, true),
+('beach_distance_km', 'ระยะห่างจากทะเล (กม.)', 'number', 'location', false, NULL, 20, true),
+('nearby_convenience', 'ร้านสะดวกซื้อ / ห้างใกล้เคียง', 'multiselect', 'location', false, '["7-Eleven","Lotus''s","Big C","Makro","แม็คโคร","ตลาดสด","ร้านอาหาร","โรงพยาบาล","ปั๊มน้ำมัน"]', 21, true),
+('nearby_attractions', 'แหล่งท่องเที่ยวใกล้เคียง', 'textarea', 'location', false, NULL, 22, true),
+('distance_to_beach_walk_min', 'เวลาเดินไปทะเล (นาที)', 'number', 'location', false, NULL, 23, true);
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 3. ห้องนอน / ห้องน้ำ (rooms)

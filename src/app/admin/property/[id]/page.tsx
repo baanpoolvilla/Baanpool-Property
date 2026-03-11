@@ -28,6 +28,7 @@ import Link from "next/link";
 import { AdminShell } from "@/components/admin-shell";
 import { DynamicField } from "@/components/dynamic-field";
 import { CompletenessScore } from "@/components/completeness-score";
+import { PropertyNotes } from "@/components/property-notes";
 import { usePropertyFields } from "@/hooks/use-property-fields";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import {
@@ -356,6 +357,11 @@ export default function PropertyFormPage() {
                 </Collapsible>
               </Card>
             ))}
+
+            {/* Property Notes / Maintenance Log */}
+            {!isNew && propertyId && (
+              <PropertyNotes propertyId={propertyId} />
+            )}
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-3 pt-2">

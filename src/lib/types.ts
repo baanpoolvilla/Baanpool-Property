@@ -45,6 +45,21 @@ export interface SectionConfig {
   order: number;
 }
 
+// ─── Property Notes ────────────────────────────────────────────────────────
+
+export interface PropertyNote {
+  id: number;
+  property_id: number;
+  title: string;
+  content: string;
+  category: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type PropertyNoteInsert = Omit<PropertyNote, "id" | "created_at" | "updated_at">;
+export type PropertyNoteUpdate = Partial<Omit<PropertyNote, "id" | "property_id" | "created_at" | "updated_at">>;
+
 // ─── API Response ──────────────────────────────────────────────────────────
 
 export interface ApiError {
