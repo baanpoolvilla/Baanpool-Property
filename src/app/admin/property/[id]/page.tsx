@@ -27,6 +27,8 @@ import Link from "next/link";
 import { AdminShell } from "@/components/admin-shell";
 import { DynamicField } from "@/components/dynamic-field";
 import { CompletenessScore } from "@/components/completeness-score";
+import { BedroomEditor } from "@/components/bedroom-editor";
+import type { BedroomRoom } from "@/components/bedroom-editor";
 import { usePropertyFields } from "@/hooks/use-property-fields";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import {
@@ -330,25 +332,39 @@ export default function PropertyFormPage() {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <Separator />
-                    <CardContent className="pt-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {sectionFields.map((field) => (
-                          <div
-                            key={field.id}
-                            className={
-                              field.type === "textarea"
-                                ? "md:col-span-2"
-                                : undefined
+                    <CardContent className="pt-6 space-y-6">
+                      {/* ห้องนอน: Bedroom detail editor */}
+                      {section === "rooms" && (
+                        <div className="md:col-span-2">
+                          <BedroomEditor
+                            value={(data.bedroom_details as BedroomRoom[]) ?? []}
+                            onChange={(rooms) =>
+                              handleFieldChange("bedroom_details", rooms)
                             }
-                          >
-                            <DynamicField
-                              field={field}
-                              value={data[field.field_key]}
-                              onChange={handleFieldChange}
-                            />
-                          </div>
-                        ))}
-                      </div>
+                          />
+                        </div>
+                      )}
+                      {/* Regular dynamic fields */}
+                      {sectionFields.length > 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {sectionFields.map((field) => (
+                            <div
+                              key={field.id}
+                              className={
+                                field.type === "textarea"
+                                  ? "md:col-span-2"
+                                  : undefined
+                              }
+                            >
+                              <DynamicField
+                                field={field}
+                                value={data[field.field_key]}
+                                onChange={handleFieldChange}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </CollapsibleContent>
                 </Collapsible>
