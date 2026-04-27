@@ -198,7 +198,7 @@ export function BedroomEditor({ value, onChange }: BedroomEditorProps) {
                         <Label className="text-xs text-muted-foreground">ประเภทเตียง</Label>
                         <Select
                           value={room.bed_type}
-                          onValueChange={(v) => updateRoom(room.id, { bed_type: v })}
+                          onValueChange={(v) => updateRoom(room.id, { bed_type: v ?? room.bed_type })}
                         >
                           <SelectTrigger className="h-8 text-sm">
                             <SelectValue />
