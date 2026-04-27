@@ -1,0 +1,1 @@
+$sqlContent = Get-Content "d:\katawutntp\Baanpool-Property-main\Baanpool-Property-main\database\seed-fields.sql" -Raw; $regex = "\('?(?<key>[^',']+)',\\s*'[^',']+'[^;]*'(?<sect>[^',']+)'[^;]*?(?<idx>\\d+),\\s*(?:true|false)\)"; $matches = [regex]::Matches($sqlContent, $regex); foreach($m in $matches){ $m.Value }
