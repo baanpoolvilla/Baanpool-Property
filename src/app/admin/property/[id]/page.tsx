@@ -334,7 +334,7 @@ export default function PropertyFormPage() {
                     <Separator />
                     <CardContent className="pt-6 space-y-6">
                       {/* ห้องนอน: Bedroom detail editor */}
-                      {section === "rooms" && (
+                      {section === "capacity" && (
                         <div className="md:col-span-2">
                           <BedroomEditor
                             value={(data.bedroom_details as BedroomRoom[]) ?? []}
