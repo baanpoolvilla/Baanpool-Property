@@ -60,16 +60,15 @@ export interface PropertyNote {
 export type PropertyNoteInsert = Omit<PropertyNote, "id" | "created_at" | "updated_at">;
 export type PropertyNoteUpdate = Partial<Omit<PropertyNote, "id" | "property_id" | "created_at" | "updated_at">>;
 
-// ─── Negative Disputes ────────────────────────────────────────────────────
+// ─── Negative Disputes (ฐานความรู้แชทบอท) ────────────────────────────────
 
 export interface NegativeDispute {
   id: number;
   property_id: number;
-  dispute_date: string; // DATE as 'YYYY-MM-DD'
-  title: string;
-  description: string;
+  complaint: string;   // ข้อร้องเรียน/คำพูดเชิงลบที่ลูกค้าอาจพูด
+  response: string;    // คำชี้แจงที่แชทบอทจะใช้ตอบลูกค้า
   category: string;
-  status: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }

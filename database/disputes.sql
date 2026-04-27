@@ -1,22 +1,28 @@
 -- ═══════════════════════════════════════════════════════════════════════════════
--- Property Disputes (ข้อมูลโต้แย้งเชิงลบ) Table
--- Run this in your database SQL editor
+-- ข้อมูลโต้แย้งเชิงลบ — ฐานความรู้สำหรับแชทบอท
+-- โครงสร้าง: คู่ (ข้อร้องเรียนของลูกค้า → คำชี้แจงของแชทบอท)
+-- เช่น "ทำไมสระน้ำเขียว" → "สระน้ำได้รับการดูแลทุกสัปดาห์..."
+-- Run this in public schema
 -- ═══════════════════════════════════════════════════════════════════════════════
 
-CREATE TABLE IF NOT EXISTS property_disputes (
+-- ลบตารางเก่าก่อน (ถ้ามี ทั้งใน public และ unified_chat)
+DROP TABLE IF EXISTS public.property_disputes CASCADE;
+DROP TABLE IF EXISTS unified_chat.property_disputes CASCADE;
+
+-- สร้างตารางใหม่
+CREATE TABLE IF NOT EXISTS public.property_disputes (
   id           SERIAL PRIMARY KEY,
-  property_id  INTEGER     NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-  dispute_date DATE        NOT NULL DEFAULT CURRENT_DATE,
-  title        TEXT        NOT NULL,
-  description  TEXT        NOT NULL DEFAULT '',
-  category     TEXT        NOT NULL DEFAULT 'ร้องเรียน',
-  status       TEXT        NOT NULL DEFAULT 'รอดำเนินการ',
+  property_id  INTEGER     NOT NULL REFERENCES public.properties(id) ON DELETE CASCADE,
+  complaint    TEXT        NOT NULL,               -- ข้อร้องเรียน/คำพูดเชิงลบที่ลูกค้าอาจพูด
+  response     TEXT        NOT NULL DEFAULT '',    -- คำชี้แจงที่แชทบอทจะใช้ตอบ
+  category     TEXT        NOT NULL DEFAULT 'ทั่วไป',
+  is_active    BOOLEAN     NOT NULL DEFAULT true,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Auto-update updated_at on every UPDATE
-CREATE OR REPLACE FUNCTION update_property_disputes_updated_at()
+-- Auto-update updated_at
+CREATE OR REPLACE FUNCTION public.update_property_disputes_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = now();
@@ -24,23 +30,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_property_disputes_updated_at ON property_disputes;
+DROP TRIGGER IF EXISTS trg_property_disputes_updated_at ON public.property_disputes;
 CREATE TRIGGER trg_property_disputes_updated_at
-  BEFORE UPDATE ON property_disputes
+  BEFORE UPDATE ON public.property_disputes
   FOR EACH ROW
-  EXECUTE FUNCTION update_property_disputes_updated_at();
+  EXECUTE FUNCTION public.update_property_disputes_updated_at();
 
--- Index for fast lookup by property
-CREATE INDEX IF NOT EXISTS idx_property_disputes_property_id ON property_disputes(property_id);
-CREATE INDEX IF NOT EXISTS idx_property_disputes_date ON property_disputes(dispute_date DESC);
+CREATE INDEX IF NOT EXISTS idx_property_disputes_property_id ON public.property_disputes(property_id);
+CREATE INDEX IF NOT EXISTS idx_property_disputes_is_active ON public.property_disputes(is_active);
 
-COMMENT ON TABLE property_disputes IS 'ข้อมูลโต้แย้งเชิงลบ: ข้อร้องเรียน ข้อพิพาท หรือข้อมูลเชิงลบที่เกี่ยวข้องกับที่พัก';
+COMMENT ON TABLE public.property_disputes IS 'ฐานความรู้สำหรับแชทบอท: คู่ข้อร้องเรียนลูกค้าและคำชี้แจง';
+COMMENT ON COLUMN public.property_disputes.complaint IS 'ข้อร้องเรียน/คำพูดเชิงลบที่ลูกค้าอาจพูด';
+COMMENT ON COLUMN public.property_disputes.response IS 'คำชี้แจง/คำตอบที่แชทบอทจะใช้ตอบลูกค้า';
 
--- Enable RLS (Row Level Security)
-ALTER TABLE property_disputes ENABLE ROW LEVEL SECURITY;
+-- Enable RLS
+ALTER TABLE public.property_disputes ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow all access to property_disputes" ON public.property_disputes;
 CREATE POLICY "Allow all access to property_disputes"
-  ON property_disputes
+  ON public.property_disputes
   FOR ALL
   USING (true)
   WITH CHECK (true);

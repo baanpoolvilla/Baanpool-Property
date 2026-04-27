@@ -232,7 +232,7 @@ export async function fetchNegativeDisputes(
     .from("property_disputes")
     .select("*")
     .eq("property_id", propertyId)
-    .order("dispute_date", { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
   return data as NegativeDispute[];
