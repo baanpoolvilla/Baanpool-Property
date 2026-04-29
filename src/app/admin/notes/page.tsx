@@ -29,12 +29,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Combobox,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxOption,
+} from "@/components/ui/combobox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -275,7 +274,7 @@ export default function NotesPage() {
           </div>
         </div>
 
-        {/* Property Selector */}
+        {/* Property Selector (Combobox with search) */}
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-2">
@@ -286,7 +285,7 @@ export default function NotesPage() {
                   กำลังโหลด…
                 </div>
               ) : (
-                <Select
+                <Combobox
                   value={selectedId?.toString() ?? ""}
                   onValueChange={(v) => {
                     setSelectedId(v ? Number(v) : null);
@@ -294,18 +293,19 @@ export default function NotesPage() {
                     setEditingId(null);
                   }}
                 >
-                  <SelectTrigger className="max-w-sm">
-                    <SelectValue placeholder="— เลือกที่พัก —" />
-                  </SelectTrigger>
-                  <SelectContent>
+                  <ComboboxInput
+                    className="max-w-sm"
+                    placeholder="ค้นหาด้วยรหัสบ้านหรือชื่อ..."
+                  />
+                  <ComboboxList className="max-h-60 overflow-y-auto bg-background border rounded-md mt-1 shadow-lg z-50">
                     {properties.map((p) => (
-                      <SelectItem key={p.id} value={p.id.toString()}>
+                      <ComboboxOption key={p.id} value={p.id.toString()}>
                         {p.house_id}
                         {p.data?.house_name ? ` — ${p.data.house_name as string}` : ""}
-                      </SelectItem>
+                      </ComboboxOption>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </ComboboxList>
+                </Combobox>
               )}
             </div>
           </CardContent>
