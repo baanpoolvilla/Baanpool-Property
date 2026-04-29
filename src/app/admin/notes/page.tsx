@@ -29,11 +29,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
-  Combobox,
-  ComboboxInput,
-  ComboboxList,
-  ComboboxOption,
-} from "@/components/ui/combobox";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -274,7 +275,7 @@ export default function NotesPage() {
           </div>
         </div>
 
-        {/* Property Selector (Combobox with search) */}
+        {/* Property Selector (Select with scroll) */}
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-2">
@@ -285,7 +286,7 @@ export default function NotesPage() {
                   กำลังโหลด…
                 </div>
               ) : (
-                <Combobox
+                <Select
                   value={selectedId?.toString() ?? ""}
                   onValueChange={(v) => {
                     setSelectedId(v ? Number(v) : null);
@@ -293,19 +294,19 @@ export default function NotesPage() {
                     setEditingId(null);
                   }}
                 >
-                  <ComboboxInput
-                    className="max-w-sm"
-                    placeholder="ค้นหาด้วยรหัสบ้านหรือชื่อ..."
-                  />
-                  <ComboboxList className="max-h-60 overflow-y-auto bg-background border rounded-md mt-1 shadow-lg z-50">
+                  <SelectTrigger className="max-w-sm" />
+                  <SelectContent className="max-h-60 overflow-y-auto">
+                    <SelectItem value="" disabled>
+                      — เลือกที่พัก —
+                    </SelectItem>
                     {properties.map((p) => (
-                      <ComboboxOption key={p.id} value={p.id.toString()}>
+                      <SelectItem key={p.id} value={p.id.toString()}>
                         {p.house_id}
                         {p.data?.house_name ? ` — ${p.data.house_name as string}` : ""}
-                      </ComboboxOption>
+                      </SelectItem>
                     ))}
-                  </ComboboxList>
-                </Combobox>
+                  </SelectContent>
+                </Select>
               )}
             </div>
           </CardContent>
