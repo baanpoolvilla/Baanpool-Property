@@ -16,6 +16,8 @@ import {
   FileJson,
   FileSpreadsheet,
   Share2,
+  Clock,
+  StickyNote,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
 import { CompletenessScore } from "@/components/completeness-score";
@@ -265,7 +267,10 @@ export default function PropertyListPage() {
                       <TableHead className="hidden xl:table-cell w-52">
                         ความสมบูรณ์
                       </TableHead>
-                      <TableHead className="text-right w-24">จัดการ</TableHead>
+                      <TableHead className="hidden lg:table-cell w-40">
+                        อัพเดตล่าสุด
+                      </TableHead>
+                      <TableHead className="text-right w-28">จัดการ</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -315,14 +320,41 @@ export default function PropertyListPage() {
                         <TableCell className="hidden xl:table-cell">
                           <CompletenessScore fields={fields} data={p.data} />
                         </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {p.updated_at ? (
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3 shrink-0" />
+                              {new Date(p.updated_at).toLocaleDateString("th-TH", {
+                                day: "numeric",
+                                month: "short",
+                                year: "2-digit",
+                              })}
+                              {" "}
+                              {new Date(p.updated_at).toLocaleTimeString("th-TH", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Link
                               href={`/admin/property/${p.id}`}
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <Button variant="ghost" size="icon">
+                              <Button variant="ghost" size="icon" title="แก้ไขข้อมูล">
                                 <Edit className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <Link
+                              href={`/admin/notes?property=${p.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Button variant="ghost" size="icon" title="ดูบันทึกหมายเหตุ" className="text-primary hover:text-primary">
+                                <StickyNote className="h-4 w-4" />
                               </Button>
                             </Link>
                             <AlertDialog>

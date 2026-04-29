@@ -173,6 +173,16 @@ export async function searchProperties(
 
 // ─── Property Notes ────────────────────────────────────────────────────────
 
+export async function fetchAllPropertyNotes(): Promise<PropertyNote[]> {
+  const { data, error } = await supabase
+    .from("property_notes")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data as PropertyNote[];
+}
+
 export async function fetchPropertyNotes(
   propertyId: number
 ): Promise<PropertyNote[]> {

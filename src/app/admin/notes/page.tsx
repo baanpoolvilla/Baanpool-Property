@@ -17,7 +17,7 @@ import {
 import { AdminShell } from "@/components/admin-shell";
 import {
   fetchProperties,
-  fetchPropertyNotes,
+  fetchAllPropertyNotes,
   createPropertyNote,
   updatePropertyNote,
   deletePropertyNote,
@@ -79,9 +79,11 @@ interface PropertyDropdownProps {
   properties: Property[];
   selectedId: number | null;
   onSelect: (id: number | null) => void;
+  placeholder?: string;
+  clearable?: boolean;
 }
 
-function PropertyDropdown({ properties, selectedId, onSelect }: PropertyDropdownProps) {
+function PropertyDropdown({ properties, selectedId, onSelect, placeholder = "— เลือกที่พัก —", clearable = true }: PropertyDropdownProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -139,10 +141,10 @@ function PropertyDropdown({ properties, selectedId, onSelect }: PropertyDropdown
         <span className={selected ? "text-foreground font-medium truncate" : "text-muted-foreground"}>
           {selected
             ? `${selected.house_id}${selected.data?.house_name ? ` \u2014 ${selected.data.house_name as string}` : ""}`
-            : "\u2014 \u0e40\u0e25\u0e37\u0e2d\u0e01\u0e17\u0e35\u0e48\u0e1e\u0e31\u0e01 \u2014"}
+            : placeholder}
         </span>
         <div className="flex items-center gap-1 shrink-0">
-          {selected && (
+          {selected && clearable && (
             <span
               role="button"
               tabIndex={0}
@@ -267,16 +269,17 @@ function EditForm({ note, onSave, onCancel, saving }: EditFormProps) {
 
 export default function NotesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [notes, setNotes] = useState<PropertyNote[]>([]);
+  const [allNotes, setAllNotes] = useState<PropertyNote[]>([]);
+  const [filterPropertyId, setFilterPropertyId] = useState<number | null>(null);
   const [loadingProperties, setLoadingProperties] = useState(true);
-  const [loadingNotes, setLoadingNotes] = useState(false);
+  const [loadingNotes, setLoadingNotes] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [adding, setAdding] = useState(false);
   const [savingId, setSavingId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
 
   // New note form state
+  const [newPropertyId, setNewPropertyId] = useState<number | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newCategory, setNewCategory] = useState("ทั่วไป");
@@ -284,36 +287,47 @@ export default function NotesPage() {
   // Load properties
   useEffect(() => {
     fetchProperties()
-      .then((data) => setProperties(data.sort((a, b) => a.id - b.id)))
+      .then((data) => {
+        const sorted = data.sort((a, b) => a.id - b.id);
+        setProperties(sorted);
+        // Auto-select from URL param ?property=ID
+        if (typeof window !== "undefined") {
+          const params = new URLSearchParams(window.location.search);
+          const param = params.get("property");
+          if (param && !isNaN(Number(param))) {
+            setFilterPropertyId(Number(param));
+          }
+        }
+      })
       .catch(() => toast.error("ไม่สามารถโหลดรายการที่พักได้"))
       .finally(() => setLoadingProperties(false));
   }, []);
 
-  // Load notes when property selected
-  const loadNotes = useCallback(async (propertyId: number) => {
-    setLoadingNotes(true);
-    try {
-      const data = await fetchPropertyNotes(propertyId);
-      setNotes(data);
-    } catch {
-      toast.error("ไม่สามารถโหลดบันทึกได้");
-    } finally {
-      setLoadingNotes(false);
-    }
+  // Load all notes on mount
+  useEffect(() => {
+    fetchAllPropertyNotes()
+      .then((data) => setAllNotes(data))
+      .catch(() => toast.error("ไม่สามารถโหลดบันทึกได้"))
+      .finally(() => setLoadingNotes(false));
   }, []);
 
-  useEffect(() => {
-    if (selectedId) {
-      loadNotes(selectedId);
-    } else {
-      setNotes([]);
-    }
-  }, [selectedId, loadNotes]);
+  // Property lookup map
+  const propertyMap = useMemo(() => {
+    const map = new Map<number, Property>();
+    for (const p of properties) map.set(p.id, p);
+    return map;
+  }, [properties]);
+
+  // Filtered notes
+  const filteredNotes = useMemo(() => {
+    if (!filterPropertyId) return allNotes;
+    return allNotes.filter((n) => n.property_id === filterPropertyId);
+  }, [allNotes, filterPropertyId]);
 
   // Group notes by date (YYYY-MM-DD from created_at)
   const notesByDate = useMemo(() => {
     const groups = new Map<string, { label: string; notes: PropertyNote[] }>();
-    for (const note of notes) {
+    for (const note of filteredNotes) {
       const d = new Date(note.created_at);
       const key = d.toISOString().slice(0, 10);
       const label = d.toLocaleDateString("th-TH", {
@@ -329,32 +343,28 @@ export default function NotesPage() {
         groups.set(key, { label, notes: [note] });
       }
     }
-    // Return sorted descending by date key
     return Array.from(groups.entries()).sort(([a], [b]) => b.localeCompare(a));
-  }, [notes]);
+  }, [filteredNotes]);
 
   // Add note
   const handleAdd = async () => {
-    if (!newTitle.trim()) {
-      toast.error("กรุณากรอกหัวข้อ");
-      return;
-    }
-    if (!selectedId) return;
+    if (!newTitle.trim()) { toast.error("กรุณากรอกหัวข้อ"); return; }
+    if (!newPropertyId) { toast.error("กรุณาเลือกที่พัก"); return; }
 
     setAdding(true);
     try {
-      await createPropertyNote({
-        property_id: selectedId,
+      const created = await createPropertyNote({
+        property_id: newPropertyId,
         title: newTitle.trim(),
         content: newContent.trim(),
         category: newCategory,
       });
+      setAllNotes((prev) => [created, ...prev]);
       toast.success("เพิ่มบันทึกเรียบร้อย");
       setNewTitle("");
       setNewContent("");
       setNewCategory("ทั่วไป");
       setShowForm(false);
-      await loadNotes(selectedId);
     } catch {
       toast.error("ไม่สามารถเพิ่มบันทึกได้");
     } finally {
@@ -363,288 +373,293 @@ export default function NotesPage() {
   };
 
   // Update note
-  const handleUpdate = async (
+  const handleUpdate = useCallback(async (
     id: number,
     updates: { title?: string; content?: string; category?: string }
   ) => {
     setSavingId(id);
     try {
       await updatePropertyNote(id, updates);
-      setNotes((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, ...updates } : n))
-      );
+      setAllNotes((prev) => prev.map((n) => (n.id === id ? { ...n, ...updates } : n)));
       setEditingId(null);
     } catch {
       toast.error("ไม่สามารถบันทึกได้");
     } finally {
       setSavingId(null);
     }
-  };
+  }, []);
 
   // Delete note
   const handleDelete = async (id: number) => {
     try {
       await deletePropertyNote(id);
-      setNotes((prev) => prev.filter((n) => n.id !== id));
+      setAllNotes((prev) => prev.filter((n) => n.id !== id));
       toast.success("ลบบันทึกเรียบร้อย");
     } catch {
       toast.error("ไม่สามารถลบได้");
     }
   };
 
-  const selectedProperty = properties.find((p) => p.id === selectedId);
-
-  const handlePropertySelect = (id: number | null) => {
-    setSelectedId(id);
-    setShowForm(false);
-    setEditingId(null);
-  };
+  const filterProperty = filterPropertyId ? propertyMap.get(filterPropertyId) : null;
 
   return (
     <AdminShell>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <StickyNote className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">บันทึกหมายเหตุ</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              บันทึกรายวันแยกตามที่พัก สามารถเพิ่มได้ทุกวัน
-            </p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <StickyNote className="h-6 w-6 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">บันทึกหมายเหตุ</h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                บันทึกรายวันแยกตามที่พัก สามารถเพิ่มได้ทุกวัน
+              </p>
+            </div>
           </div>
+          <Button onClick={() => setShowForm(true)} className="gap-2" size="sm">
+            <Plus className="h-4 w-4" />
+            เพิ่มบันทึกใหม่
+          </Button>
         </div>
 
-        {/* Property Selector */}
+        {/* Filter bar */}
         <Card className="overflow-visible">
-          <CardContent className="pt-6 overflow-visible">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">เลือกที่พัก</Label>
+          <CardContent className="pt-4 pb-4 overflow-visible">
+            <div className="flex items-center gap-3 flex-wrap">
+              <Label className="text-sm font-medium shrink-0">กรองตามที่พัก:</Label>
               {loadingProperties ? (
-                <div className="flex items-center gap-2 text-muted-foreground text-sm py-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  กำลังโหลด…
-                </div>
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               ) : (
                 <PropertyDropdown
                   properties={properties}
-                  selectedId={selectedId}
-                  onSelect={handlePropertySelect}
+                  selectedId={filterPropertyId}
+                  onSelect={setFilterPropertyId}
                 />
               )}
+              {filterPropertyId && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFilterPropertyId(null)}
+                  className="text-muted-foreground gap-1 h-8"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  ดูทั้งหมด
+                </Button>
+              )}
+              <div className="ml-auto flex items-center gap-2">
+                {filterProperty && (
+                  <span className="text-sm font-medium text-primary">
+                    {filterProperty.house_id}
+                  </span>
+                )}
+                <Badge variant="secondary">{filteredNotes.length} บันทึก</Badge>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Notes Section */}
-        {selectedId && (
-          <div className="space-y-4">
-            {/* Sub-header with count + add button */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">
-                  {selectedProperty?.house_id}
-                </span>
-                <Badge variant="secondary">{notes.length} บันทึก</Badge>
+        {/* Add Form */}
+        {showForm && (
+          <Card className="overflow-visible">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                เพิ่มบันทึกใหม่
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 overflow-visible">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">เลือกที่พัก *</Label>
+                <PropertyDropdown
+                  properties={properties}
+                  selectedId={newPropertyId}
+                  onSelect={setNewPropertyId}
+                  placeholder="— เลือกที่พักที่จะบันทึก —"
+                  clearable={false}
+                />
               </div>
-              {!showForm && (
+              <div className="flex gap-3">
+                <div className="flex-1 space-y-1">
+                  <Label className="text-sm font-medium">หัวข้อ</Label>
+                  <Input
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    placeholder="เช่น น้ำรั่ว, แอร์เสีย, วิธีเปิดประตู"
+                    autoFocus
+                  />
+                </div>
+                <div className="w-40 space-y-1">
+                  <Label className="text-sm font-medium">หมวดหมู่</Label>
+                  <Select
+                    value={newCategory}
+                    onValueChange={(v) => { if (v) setNewCategory(v); }}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {NOTE_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">
+                  รายละเอียด / วิธีแก้ไข / ผู้ติดต่อ
+                </Label>
+                <Textarea
+                  value={newContent}
+                  onChange={(e) => setNewContent(e.target.value)}
+                  placeholder="เช่น น้ำรั่วจากหลังคา โทรช่างสมชาย 08x-xxx-xxxx"
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
                 <Button
-                  onClick={() => setShowForm(true)}
-                  className="gap-2"
+                  type="button"
+                  variant="outline"
                   size="sm"
+                  onClick={() => {
+                    setShowForm(false);
+                    setNewTitle("");
+                    setNewContent("");
+                    setNewCategory("ทั่วไป");
+                  }}
                 >
-                  <Plus className="h-4 w-4" />
-                  เพิ่มบันทึกวันนี้
+                  ยกเลิก
                 </Button>
-              )}
-            </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleAdd}
+                  disabled={adding}
+                  className="gap-1"
+                >
+                  {adding && <Loader2 className="h-3 w-3 animate-spin" />}
+                  บันทึก
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-            {/* Add Form */}
-            {showForm && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    เพิ่มบันทึกใหม่
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex gap-3">
-                    <div className="flex-1 space-y-1">
-                      <Label className="text-sm font-medium">หัวข้อ</Label>
-                      <Input
-                        value={newTitle}
-                        onChange={(e) => setNewTitle(e.target.value)}
-                        placeholder="เช่น น้ำรั่ว, แอร์เสีย, วิธีเปิดประตู"
-                        autoFocus
-                      />
-                    </div>
-                    <div className="w-40 space-y-1">
-                      <Label className="text-sm font-medium">หมวดหมู่</Label>
-                      <Select
-                        value={newCategory}
-                        onValueChange={(v) => { if (v) setNewCategory(v); }}
-                      >
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {NOTE_CATEGORIES.map((cat) => (
-                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">
-                      รายละเอียด / วิธีแก้ไข / ผู้ติดต่อ
-                    </Label>
-                    <Textarea
-                      value={newContent}
-                      onChange={(e) => setNewContent(e.target.value)}
-                      placeholder="เช่น น้ำรั่วจากหลังคา โทรช่างสมชาย 08x-xxx-xxxx"
-                      rows={4}
+        {/* Notes Timeline */}
+        {loadingNotes ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredNotes.length === 0 ? (
+          <Card>
+            <CardContent className="py-16 text-center text-muted-foreground text-sm">
+              {filterPropertyId ? "ไม่มีบันทึกสำหรับที่พักนี้" : "ยังไม่มีบันทึก"}{" "}
+              — กด &quot;เพิ่มบันทึกใหม่&quot; เพื่อเริ่มต้น
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-6">
+            {notesByDate.map(([dateKey, { label, notes: dayNotes }]) => (
+              <div key={dateKey} className="space-y-3">
+                {/* Date header */}
+                <div className="flex items-center gap-3">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="text-sm font-semibold text-muted-foreground">
+                    {label}
+                  </span>
+                  <Separator className="flex-1" />
+                  <Badge variant="secondary" className="shrink-0 text-xs">
+                    {dayNotes.length} รายการ
+                  </Badge>
+                </div>
+
+                {/* Notes for this day */}
+                {dayNotes.map((note) =>
+                  editingId === note.id ? (
+                    <EditForm
+                      key={note.id}
+                      note={note}
+                      saving={savingId === note.id}
+                      onSave={handleUpdate}
+                      onCancel={() => setEditingId(null)}
                     />
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setShowForm(false);
-                        setNewTitle("");
-                        setNewContent("");
-                        setNewCategory("ทั่วไป");
-                      }}
+                  ) : (
+                    <div
+                      key={note.id}
+                      className="border rounded-lg p-4 space-y-2 hover:bg-accent/20 transition-colors"
                     >
-                      ยกเลิก
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleAdd}
-                      disabled={adding}
-                      className="gap-1"
-                    >
-                      {adding && <Loader2 className="h-3 w-3 animate-spin" />}
-                      บันทึก
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Notes Timeline */}
-            {loadingNotes ? (
-              <div className="flex justify-center py-16">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : notes.length === 0 ? (
-              <Card>
-                <CardContent className="py-16 text-center text-muted-foreground text-sm">
-                  ยังไม่มีบันทึกสำหรับที่พักนี้ — กด &quot;เพิ่มบันทึกวันนี้&quot; เพื่อเริ่มต้น
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-6">
-                {notesByDate.map(([dateKey, { label, notes: dayNotes }]) => (
-                  <div key={dateKey} className="space-y-3">
-                    {/* Date header */}
-                    <div className="flex items-center gap-3">
-                      <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="text-sm font-semibold text-muted-foreground">
-                        {label}
-                      </span>
-                      <Separator className="flex-1" />
-                      <Badge variant="secondary" className="shrink-0 text-xs">
-                        {dayNotes.length} รายการ
-                      </Badge>
-                    </div>
-
-                    {/* Notes for this day */}
-                    {dayNotes.map((note) =>
-                      editingId === note.id ? (
-                        <EditForm
-                          key={note.id}
-                          note={note}
-                          saving={savingId === note.id}
-                          onSave={handleUpdate}
-                          onCancel={() => setEditingId(null)}
-                        />
-                      ) : (
-                        <div
-                          key={note.id}
-                          className="border rounded-lg p-4 space-y-2 hover:bg-accent/20 transition-colors"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="font-medium text-sm">{note.title}</h4>
-                                <Badge variant={categoryColor(note.category)}>
-                                  {note.category}
-                                </Badge>
-                              </div>
-                              {note.content && (
-                                <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">
-                                  {note.content}
-                                </p>
-                              )}
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {new Date(note.created_at).toLocaleTimeString("th-TH", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => setEditingId(note.id)}
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger
-                                  render={
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7 text-destructive hover:text-destructive"
-                                    />
-                                  }
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>ลบบันทึกนี้?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      การลบนี้ไม่สามารถยกเลิกได้
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDelete(note.id)}
-                                      className="bg-destructive hover:bg-destructive/90"
-                                    >
-                                      ลบ
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-medium text-sm">{note.title}</h4>
+                            <Badge variant={categoryColor(note.category)}>
+                              {note.category}
+                            </Badge>
+                            {!filterPropertyId && propertyMap.get(note.property_id) && (
+                              <Badge variant="outline" className="text-xs font-mono">
+                                {propertyMap.get(note.property_id)!.house_id}
+                              </Badge>
+                            )}
                           </div>
+                          {note.content && (
+                            <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap break-words">
+                              {note.content}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(note.created_at).toLocaleTimeString("th-TH", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
                         </div>
-                      )
-                    )}
-                  </div>
-                ))}
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => setEditingId(note.id)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger
+                              render={
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-destructive hover:text-destructive"
+                                />
+                              }
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>ลบบันทึกนี้?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  การลบนี้ไม่สามารถยกเลิกได้
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(note.id)}
+                                  className="bg-destructive hover:bg-destructive/90"
+                                >
+                                  ลบ
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                )}
               </div>
-            )}
+            ))}
           </div>
         )}
       </div>
