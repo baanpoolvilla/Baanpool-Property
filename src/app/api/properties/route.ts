@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-// Using Supabase client to connect to PostgREST
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
-);
+import { supabase } from "@/lib/supabase";
 
 // Maps field keys to Thai label + section for AI-readable output
 // Fetched from DB at runtime

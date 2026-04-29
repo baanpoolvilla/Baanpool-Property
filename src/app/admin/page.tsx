@@ -56,7 +56,6 @@ export default function PropertyListPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const { fields } = usePropertyFields(true);
 
   const getPropertyZone = (data: Record<string, unknown>) => {
     const zone = data.zone;
