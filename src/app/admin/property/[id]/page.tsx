@@ -29,6 +29,10 @@ import { DynamicField } from "@/components/dynamic-field";
 import { CompletenessScore } from "@/components/completeness-score";
 import { BedroomEditor } from "@/components/bedroom-editor";
 import type { BedroomRoom } from "@/components/bedroom-editor";
+import { BathroomEditor } from "@/components/bathroom-editor";
+import type { BathroomDetail } from "@/components/bathroom-editor";
+import { NearbyPlacesEditor } from "@/components/nearby-places-editor";
+import type { NearbyPlace } from "@/components/nearby-places-editor";
 import { usePropertyFields } from "@/hooks/use-property-fields";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import {
@@ -333,27 +337,33 @@ export default function PropertyFormPage() {
                   <CollapsibleContent>
                     <Separator />
                     <CardContent className="pt-6 space-y-6">
-                      {/* ห้องนอน: Bedroom detail editor */}
+                      {/* capacity: BedroomEditor + BathroomEditor */}
                       {section === "capacity" && (
-                        <div className="md:col-span-2">
+                        <>
                           <BedroomEditor
                             value={(data.bedroom_details as BedroomRoom[]) ?? []}
-                            onChange={(rooms) =>
-                              handleFieldChange("bedroom_details", rooms)
-                            }
+                            onChange={(rooms) => handleFieldChange("bedroom_details", rooms)}
                           />
-                        </div>
+                          <BathroomEditor
+                            value={(data.bathroom_details as BathroomDetail[]) ?? []}
+                            onChange={(baths) => handleFieldChange("bathroom_details", baths)}
+                          />
+                        </>
                       )}
-                      {/* Regular dynamic fields */}
-                      {sectionFields.length > 0 && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {sectionFields.map((field) => (
+
+                      {/* Regular dynamic fields (conditional hiding) */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {sectionFields
+                          .filter((f) => {
+                            if (f.field_key === "ev_charger_details" && !data.ev_charger_available) return false;
+                            if (f.field_key === "extra_bed_details" && !data.extra_bed_available) return false;
+                            return true;
+                          })
+                          .map((field) => (
                             <div
                               key={field.id}
                               className={
-                                field.type === "textarea"
-                                  ? "md:col-span-2"
-                                  : undefined
+                                field.type === "textarea" ? "md:col-span-2" : undefined
                               }
                             >
                               <DynamicField
@@ -363,7 +373,14 @@ export default function PropertyFormPage() {
                               />
                             </div>
                           ))}
-                        </div>
+                      </div>
+
+                      {/* location: NearbyPlacesEditor */}
+                      {section === "location" && (
+                        <NearbyPlacesEditor
+                          value={(data.nearby_places as NearbyPlace[]) ?? []}
+                          onChange={(places) => handleFieldChange("nearby_places", places)}
+                        />
                       )}
                     </CardContent>
                   </CollapsibleContent>

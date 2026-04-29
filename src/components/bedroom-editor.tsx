@@ -252,11 +252,11 @@ export function BedroomEditor({ value, onChange }: BedroomEditorProps) {
 
                     {/* Row 4: Notes */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">หมายเหตุเพิ่มเติม</Label>
+                      <Label className="text-xs text-muted-foreground">รายละเอียดเตียง / หมายเหตุ</Label>
                       <Textarea
                         value={room.notes}
                         onChange={(e) => updateRoom(room.id, { notes: e.target.value })}
-                        placeholder="เช่น วิวสระน้ำ, ห้องมุม, ชั้น 2"
+                        placeholder="เช่น ชั้น 1: เตียง 5 ฟุต, ชั้น 2: เตียง 3 ฟุต; วิวสระน้ำ, ห้องมุม"
                         rows={2}
                         className="text-sm resize-none"
                       />
