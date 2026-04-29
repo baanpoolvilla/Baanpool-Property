@@ -141,7 +141,8 @@ export default function PropertyListPage() {
       const data = search.trim()
         ? await searchProperties(search.trim())
         : await fetchProperties();
-      setProperties(data);
+      // เรียง id น้อยไปมาก
+      setProperties(data.sort((a, b) => a.id - b.id));
     } catch (err) {
       toast.error("ไม่สามารถโหลดรายการที่พักได้");
     } finally {
