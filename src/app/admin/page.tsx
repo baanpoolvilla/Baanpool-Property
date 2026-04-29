@@ -17,13 +17,10 @@ import {
   FileSpreadsheet,
   Share2,
   Clock,
-  StickyNote,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
-import { CompletenessScore } from "@/components/completeness-score";
-import { usePropertyFields } from "@/hooks/use-property-fields";
 import { deleteProperty, fetchProperties, searchProperties } from "@/lib/api";
-import type { Property, PropertyField } from "@/lib/types";
+import type { Property } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -264,9 +261,6 @@ export default function PropertyListPage() {
                       <TableHead className="hidden lg:table-cell">
                         ผู้เข้าพัก
                       </TableHead>
-                      <TableHead className="hidden xl:table-cell w-52">
-                        ความสมบูรณ์
-                      </TableHead>
                       <TableHead className="hidden lg:table-cell w-40">
                         อัพเดตล่าสุด
                       </TableHead>
@@ -317,12 +311,13 @@ export default function PropertyListPage() {
                             <span className="text-muted-foreground">—</span>
                           )}
                         </TableCell>
-                        <TableCell className="hidden xl:table-cell">
-                          <CompletenessScore fields={fields} data={p.data} />
-                        </TableCell>
                         <TableCell className="hidden lg:table-cell">
                           {p.updated_at ? (
-                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Link
+                              href={`/admin/property/${p.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center gap-1 text-xs text-primary hover:underline"
+                            >
                               <Clock className="h-3 w-3 shrink-0" />
                               {new Date(p.updated_at).toLocaleDateString("th-TH", {
                                 day: "numeric",
@@ -334,7 +329,7 @@ export default function PropertyListPage() {
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })}
-                            </span>
+                            </Link>
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}
@@ -347,14 +342,6 @@ export default function PropertyListPage() {
                             >
                               <Button variant="ghost" size="icon" title="แก้ไขข้อมูล">
                                 <Edit className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                            <Link
-                              href={`/admin/notes?property=${p.id}`}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Button variant="ghost" size="icon" title="ดูบันทึกหมายเหตุ" className="text-primary hover:text-primary">
-                                <StickyNote className="h-4 w-4" />
                               </Button>
                             </Link>
                             <AlertDialog>
