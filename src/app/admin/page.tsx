@@ -19,6 +19,7 @@ import {
   Clock,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
+import { usePropertyFields } from "@/hooks/use-property-fields";
 import { deleteProperty, fetchProperties, searchProperties } from "@/lib/api";
 import type { Property } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,21 @@ export default function PropertyListPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const { fields } = usePropertyFields(true);
+
+  const getCompletenessPercent = (data: Record<string, unknown>) => {
+    const activeFields = fields.filter((f) => f.is_active);
+    if (activeFields.length === 0) return 0;
+
+    const filledCount = activeFields.filter((f) => {
+      const v = data[f.field_key];
+      if (v === undefined || v === null || v === "") return false;
+      if (Array.isArray(v) && v.length === 0) return false;
+      return true;
+    }).length;
+
+    return Math.round((filledCount / activeFields.length) * 100);
+  };
 
   const getPropertyZone = (data: Record<string, unknown>) => {
     const zone = data.zone;
@@ -260,6 +276,9 @@ export default function PropertyListPage() {
                       <TableHead className="hidden lg:table-cell">
                         ผู้เข้าพัก
                       </TableHead>
+                      <TableHead className="hidden xl:table-cell w-28">
+                        ความคืบหน้า
+                      </TableHead>
                       <TableHead className="hidden lg:table-cell w-40">
                         อัพเดตล่าสุด
                       </TableHead>
@@ -309,6 +328,11 @@ export default function PropertyListPage() {
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell">
+                          <Badge variant="outline" className="text-xs">
+                            {getCompletenessPercent(p.data)}%
+                          </Badge>
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
                           {p.updated_at ? (
