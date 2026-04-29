@@ -9,7 +9,7 @@ import {
   Settings2,
   Plus,
   StickyNote,
-  AlertTriangle,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import { Separator } from "@/components/ui/separator";
 const navItems = [
   { href: "/admin", label: "รายการที่พัก", icon: Building2 },
   { href: "/admin/notes", label: "บันทึกหมายเหตุ", icon: StickyNote },
-  { href: "/admin/disputes", label: "ข้อมูลโต้แย้งเชิงลบ", icon: AlertTriangle },
+  { href: "/admin/disputes", label: "คำถามที่พบบ่อย", icon: HelpCircle },
   { href: "/admin/fields", label: "จัดการฟิลด์", icon: Settings2 },
 ];
 

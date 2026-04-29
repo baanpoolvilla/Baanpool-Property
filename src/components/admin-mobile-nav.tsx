@@ -10,7 +10,7 @@ import {
   Plus,
   Settings2,
   StickyNote,
-  AlertTriangle,
+  HelpCircle,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,7 +20,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 const navItems = [
   { href: "/admin", label: "รายการที่พัก", icon: Building2 },
   { href: "/admin/notes", label: "บันทึกหมายเหตุ", icon: StickyNote },
-  { href: "/admin/disputes", label: "ข้อมูลโต้แย้งเชิงลบ", icon: AlertTriangle },
+  { href: "/admin/disputes", label: "คำถามที่พบบ่อย", icon: HelpCircle },
   { href: "/admin/fields", label: "จัดการฟิลด์", icon: Settings2 },
 ];
 

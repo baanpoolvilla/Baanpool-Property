@@ -1,17 +1,20 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
-  AlertTriangle,
+  HelpCircle,
   Plus,
   Loader2,
   Trash2,
   Pencil,
-  MessageCircleX,
+  MessageCircleQuestion,
   MessageCircleCheck,
   EyeOff,
   Eye,
+  Search,
+  ChevronDown,
+  X,
 } from "lucide-react";
 
 import { AdminShell } from "@/components/admin-shell";
@@ -25,6 +28,7 @@ import {
 import type { Property, NegativeDispute } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +67,136 @@ const DISPUTE_CATEGORIES = [
   "ทั่วไป",
 ];
 
+// ─── Property Search Dropdown ─────────────────────────────────────────────────────
+
+interface PropertyDropdownProps {
+  properties: Property[];
+  selectedId: number | null;
+  onSelect: (id: number | null) => void;
+}
+
+function PropertyDropdown({ properties, selectedId, onSelect }: PropertyDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selected = properties.find((p) => p.id === selectedId);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    if (!q) return properties;
+    return properties.filter(
+      (p) =>
+        p.house_id.toLowerCase().includes(q) ||
+        (typeof p.data?.house_name === "string" &&
+          (p.data.house_name as string).toLowerCase().includes(q))
+    );
+  }, [properties, search]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const handleOpen = () => {
+    setOpen(true);
+    setSearch("");
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const handleSelect = (p: Property) => {
+    onSelect(p.id);
+    setOpen(false);
+    setSearch("");
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSelect(null);
+    setOpen(false);
+    setSearch("");
+  };
+
+  return (
+    <div ref={containerRef} className="relative max-w-sm">
+      <button
+        type="button"
+        onClick={handleOpen}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-input bg-background text-sm hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring/50"
+      >
+        <span className={selected ? "text-foreground font-medium truncate" : "text-muted-foreground"}>
+          {selected
+            ? `${selected.house_id}${typeof selected.data?.house_name === "string" && selected.data.house_name ? ` — ${selected.data.house_name}` : ""}`
+            : "— เลือกที่พัก —"}
+        </span>
+        <div className="flex items-center gap-1 shrink-0">
+          {selected && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={handleClear}
+              onKeyDown={(e) => e.key === "Enter" && handleClear(e as unknown as React.MouseEvent)}
+              className="p-0.5 rounded hover:bg-muted"
+            >
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </span>
+          )}
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        </div>
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-background shadow-lg">
+          <div className="p-2 border-b border-border">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                ref={inputRef}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search..."
+                className="pl-8 h-8 text-sm"
+              />
+            </div>
+          </div>
+          <ul className="max-h-56 overflow-y-auto py-1">
+            {filtered.length === 0 ? (
+              <li className="px-3 py-2 text-sm text-muted-foreground text-center">
+                Not found
+              </li>
+            ) : (
+              filtered.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelect(p)}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-primary/10 transition-colors ${
+                      p.id === selectedId ? "bg-primary/15 font-semibold text-primary" : ""
+                    }`}
+                  >
+                    <span className="font-mono font-semibold">{p.house_id}</span>
+                    {typeof p.data?.house_name === "string" && p.data.house_name && (
+                      <span className="text-muted-foreground ml-2">
+                        {" — "}{p.data.house_name}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Edit Form ────────────────────────────────────────────────────────────
 
 interface EditFormProps {
@@ -92,8 +226,8 @@ function EditForm({ dispute, onSave, onCancel, saving }: EditFormProps) {
       </div>
       <div className="space-y-1">
         <Label className="text-sm font-medium flex items-center gap-1">
-          <MessageCircleX className="h-3.5 w-3.5 text-destructive" />
-          ข้อร้องเรียน / คำพูดเชิงลบที่ลูกค้าอาจพูด
+          <MessageCircleQuestion className="h-3.5 w-3.5 text-primary" />
+          คำถามที่ลูกค้ามักถาม
         </Label>
         <Textarea
           value={complaint}
@@ -105,7 +239,7 @@ function EditForm({ dispute, onSave, onCancel, saving }: EditFormProps) {
       <div className="space-y-1">
         <Label className="text-sm font-medium flex items-center gap-1">
           <MessageCircleCheck className="h-3.5 w-3.5 text-primary" />
-          คำชี้แจง / คำตอบที่แชทบอทจะตอบลูกค้า
+          คำตอบ / คำชี้แจง
         </Label>
         <Textarea
           value={response}
@@ -165,7 +299,7 @@ export default function DisputesPage() {
 
   useEffect(() => {
     fetchProperties()
-      .then(setProperties)
+      .then((data) => setProperties(data.sort((a, b) => a.id - b.id)))
       .catch(() => toast.error("ไม่สามารถโหลดรายการที่พักได้"))
       .finally(() => setLoadingProperties(false));
   }, []);
@@ -273,13 +407,13 @@ export default function DisputesPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">ข้อมูลโต้แย้งเชิงลบ</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              ฐานความรู้สำหรับแชทบอท — คู่ข้อร้องเรียนของลูกค้า &amp; คำชี้แจงที่แชทบอทจะตอบ
+            บันทึกคำถามที่พบบ่อยพร้อมคำตอบ — สำหรับโชว์บนเว็บไซต์และแชทบอต
             </p>
           </div>
         </div>
 
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="overflow-visible">
+          <CardContent className="pt-6 overflow-visible">
             <div className="space-y-2">
               <Label className="text-sm font-medium">เลือกที่พัก</Label>
               {loadingProperties ? (
@@ -287,25 +421,15 @@ export default function DisputesPage() {
                   <Loader2 className="h-4 w-4 animate-spin" />กำลังโหลด…
                 </div>
               ) : (
-                <Select
-                  value={selectedId?.toString() ?? ""}
-                  onValueChange={(v) => {
-                    setSelectedId(v ? Number(v) : null);
+                <PropertyDropdown
+                  properties={properties}
+                  selectedId={selectedId}
+                  onSelect={(id) => {
+                    setSelectedId(id);
                     setShowForm(false);
                     setEditingId(null);
                   }}
-                >
-                  <SelectTrigger className="max-w-sm">
-                    <SelectValue placeholder="— เลือกที่พัก —" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {properties.map((p) => (
-                      <SelectItem key={p.id} value={p.id.toString()}>
-                        {p.house_id}{p.data?.house_name ? ` — ${p.data.house_name as string}` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
               )}
             </div>
           </CardContent>
@@ -323,7 +447,7 @@ export default function DisputesPage() {
               {!showForm && (
                 <Button onClick={() => setShowForm(true)} size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
-                  เพิ่มข้อมูลใหม่
+                  เพิ่มคำถามใหม่
                 </Button>
               )}
             </div>
@@ -333,27 +457,27 @@ export default function DisputesPage() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Plus className="h-4 w-4" />
-                    เพิ่มคู่ข้อร้องเรียน — คำชี้แจงใหม่
+                    เพิ่มคำถามใหม่
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-1">
                     <Label className="text-sm font-medium flex items-center gap-1">
-                      <MessageCircleX className="h-3.5 w-3.5 text-destructive" />
-                      ข้อร้องเรียน / คำพูดเชิงลบที่ลูกค้าอาจพูด
+                      <MessageCircleQuestion className="h-3.5 w-3.5 text-primary" />
+                      คำถามที่ลูกค้ามักถาม
                     </Label>
                     <Textarea
                       value={newComplaint}
                       onChange={(e) => setNewComplaint(e.target.value)}
-                      placeholder={"เช่น ทำไมสระน้ำเขียว\nเช่น พื้นบ้านเหนียวมาก\nเช่น เสียงดังเกินไป"}
-                      rows={3}
+                      placeholder="เช่น ชักฟอกเวลา check-in ได้เลย?"
+                      rows={2}
                       autoFocus
                     />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-sm font-medium flex items-center gap-1">
                       <MessageCircleCheck className="h-3.5 w-3.5 text-primary" />
-                      คำชี้แจง / คำตอบที่แชทบอทจะตอบลูกค้า
+                      คำตอบ / คำชี้แจง
                     </Label>
                     <Textarea
                       value={newResponse}
@@ -405,7 +529,7 @@ export default function DisputesPage() {
             ) : disputes.length === 0 ? (
               <Card>
                 <CardContent className="py-16 text-center text-muted-foreground text-sm">
-                  ยังไม่มีข้อมูลสำหรับที่พักนี้ — กด &quot;เพิ่มข้อมูลใหม่&quot; เพื่อเริ่มต้น
+                  ยังไม่มีข้อมูลสำหรับที่พักนี้ — กด &quot;เพิ่มคำถามใหม่&quot; เพื่อเริ่มต้น
                 </CardContent>
               </Card>
             ) : (
@@ -431,9 +555,9 @@ export default function DisputesPage() {
                           key={dispute.id}
                           className={`border rounded-lg overflow-hidden transition-opacity ${!dispute.is_active ? "opacity-50" : ""}`}
                         >
-                          <div className="flex items-start gap-3 p-3 bg-destructive/5 border-b">
-                            <MessageCircleX className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-                            <p className="text-sm flex-1 whitespace-pre-wrap">{dispute.complaint}</p>
+                          <div className="flex items-start gap-3 p-3 bg-primary/5 border-b">
+                            <MessageCircleQuestion className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                            <p className="text-sm flex-1 whitespace-pre-wrap font-medium">{dispute.complaint}</p>
                           </div>
                           <div className="flex items-start gap-3 p-3 bg-primary/5">
                             <MessageCircleCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />

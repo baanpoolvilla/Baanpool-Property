@@ -415,8 +415,8 @@ export default function NotesPage() {
         </div>
 
         {/* Property Selector */}
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="overflow-visible">
+          <CardContent className="pt-6 overflow-visible">
             <div className="space-y-2">
               <Label className="text-sm font-medium">เลือกที่พัก</Label>
               {loadingProperties ? (
