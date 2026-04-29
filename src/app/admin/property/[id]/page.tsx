@@ -209,18 +209,19 @@ export default function PropertyFormPage() {
     setSubmitting(true);
     try {
       if (isNew) {
-        const created = await createProperty({
+        await createProperty({
           house_id: houseId.trim(),
           data,
         });
         toast.success("สร้างที่พักเรียบร้อย!");
-        router.push(`/admin/property/${created.id}`);
+        router.push("/admin");
       } else if (propertyId) {
         await updateProperty(propertyId, {
           house_id: houseId.trim(),
           data,
         });
         toast.success("บันทึกเรียบร้อย!");
+        router.push("/admin");
       }
     } catch (err) {
       toast.error(
