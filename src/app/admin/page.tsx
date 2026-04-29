@@ -330,7 +330,14 @@ export default function PropertyListPage() {
                           )}
                         </TableCell>
                         <TableCell className="hidden xl:table-cell">
-                          <Badge variant="outline" className="text-xs">
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${
+                              getCompletenessPercent(p.data) < 80
+                                ? "text-destructive border-destructive/40"
+                                : "text-green-600 border-green-300"
+                            }`}
+                          >
                             {getCompletenessPercent(p.data)}%
                           </Badge>
                         </TableCell>
