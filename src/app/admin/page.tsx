@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Building2,
@@ -52,10 +53,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function PropertyListPage() {
+  const router = useRouter();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const { fields } = usePropertyFields(true);
+
+  const getPropertyZone = (data: Record<string, unknown>) => {
+    const zone = data.zone;
+    if (typeof zone === "string" && zone.trim()) return zone;
+
+    const legacyLocation = data.location;
+    if (typeof legacyLocation === "string" && legacyLocation.trim()) {
+      return legacyLocation;
+    }
+
+    return null;
+  };
 
   // ─── Export helpers ────────────────────────────────────────────────
   const exportJSON = () => {
@@ -255,7 +269,18 @@ export default function PropertyListPage() {
                   </TableHeader>
                   <TableBody>
                     {properties.map((p) => (
-                      <TableRow key={p.id}>
+                      <TableRow
+                        key={p.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/admin/property/${p.id}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            router.push(`/admin/property/${p.id}`);
+                          }
+                        }}
+                        tabIndex={0}
+                      >
                         <TableCell className="font-mono font-semibold">
                           {p.house_id}
                         </TableCell>
@@ -267,10 +292,10 @@ export default function PropertyListPage() {
                           )}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          {p.data.location ? (
+                          {getPropertyZone(p.data) ? (
                             <span className="flex items-center gap-1 text-sm">
                               <MapPin className="h-3 w-3" />
-                              {p.data.location as string}
+                              {getPropertyZone(p.data)}
                             </span>
                           ) : (
                             <span className="text-muted-foreground">—</span>
@@ -291,7 +316,10 @@ export default function PropertyListPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <Link href={`/admin/property/${p.id}`}>
+                            <Link
+                              href={`/admin/property/${p.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <Button variant="ghost" size="icon">
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -303,6 +331,7 @@ export default function PropertyListPage() {
                                     variant="ghost"
                                     size="icon"
                                     className="text-destructive hover:text-destructive"
+                                    onClick={(e) => e.stopPropagation()}
                                   />
                                 }
                               >
