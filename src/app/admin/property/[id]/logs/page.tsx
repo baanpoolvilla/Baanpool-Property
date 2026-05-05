@@ -154,7 +154,7 @@ export default function PropertyLogsPage() {
                       </Badge>
                       <span className="flex items-center gap-1 text-sm font-normal text-muted-foreground">
                         <UserRound className="h-4 w-4" />
-                        {log.actor_username}
+                        {log.actor_username_snapshot}
                       </span>
                     </div>
                     <span className="flex items-center gap-1 text-sm font-normal text-muted-foreground">

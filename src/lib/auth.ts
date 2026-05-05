@@ -2,12 +2,12 @@ const encoder = new TextEncoder();
 
 export const ADMIN_SESSION_COOKIE = "bp_admin_session";
 
-const DEFAULT_ADMIN_USERNAME = "admin";
-const DEFAULT_ADMIN_PASSWORD = "Baanpool@2026";
 const DEFAULT_AUTH_SECRET = "baanpool-auth-secret-change-me";
 
 type SessionPayload = {
+  userId: number;
   username: string;
+  role: "super_admin" | "editor";
   exp: number;
 };
 
@@ -40,16 +40,15 @@ async function signValue(value: string) {
     .join("");
 }
 
-export function getAdminCredentials() {
-  return {
-    username: process.env.ADMIN_USERNAME || DEFAULT_ADMIN_USERNAME,
-    password: process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD,
-  };
-}
-
-export async function createSessionToken(username: string) {
+export async function createSessionToken(session: {
+  userId: number;
+  username: string;
+  role: "super_admin" | "editor";
+}) {
   const payload: SessionPayload = {
-    username,
+    userId: session.userId,
+    username: session.username,
+    role: session.role,
     exp: Date.now() + 1000 * 60 * 60 * 24 * 7,
   };
   const encodedPayload = toBase64Url(JSON.stringify(payload));
@@ -68,14 +67,9 @@ export async function verifySessionToken(token?: string | null) {
 
   try {
     const payload = JSON.parse(fromBase64Url(encodedPayload)) as SessionPayload;
-    if (!payload.username || payload.exp < Date.now()) return null;
+    if (!payload.userId || !payload.username || !payload.role || payload.exp < Date.now()) return null;
     return payload;
   } catch {
     return null;
   }
-}
-
-export async function authenticateAdmin(username: string, password: string) {
-  const credentials = getAdminCredentials();
-  return username === credentials.username && password === credentials.password;
 }

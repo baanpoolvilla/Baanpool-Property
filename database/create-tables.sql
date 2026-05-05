@@ -46,23 +46,96 @@ BEGIN
   END IF;
 END $$;
 
--- ─── 3. ตาราง property_change_logs (ประวัติการแก้ไขข้อมูลที่พัก) ───────────
+-- ─── 3. ตาราง admin_users (บัญชีผู้ดูแลระบบ) ─────────────────────────────
+
+CREATE TABLE IF NOT EXISTS admin_users (
+  id            SERIAL PRIMARY KEY,
+  username      TEXT        NOT NULL UNIQUE,
+  password_hash TEXT        NOT NULL,
+  role          TEXT        NOT NULL DEFAULT 'editor' CHECK (role IN ('super_admin', 'editor')),
+  is_active     BOOLEAN     NOT NULL DEFAULT true,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE OR REPLACE FUNCTION update_admin_users_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_admin_users_updated_at ON admin_users;
+CREATE TRIGGER trg_admin_users_updated_at
+  BEFORE UPDATE ON admin_users
+  FOR EACH ROW
+  EXECUTE FUNCTION update_admin_users_updated_at();
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_users_username ON admin_users(username);
+
+GRANT SELECT ON admin_users TO web_anon;
+GRANT USAGE, SELECT ON SEQUENCE admin_users_id_seq TO web_anon;
+
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow select admin_users" ON admin_users;
+CREATE POLICY "Allow select admin_users"
+  ON admin_users FOR SELECT
+  USING (true);
+
+-- default admin seed: username=admin / password=Baanpool@2026
+INSERT INTO admin_users (username, password_hash, role, is_active)
+VALUES (
+  'admin',
+  'scrypt$16384$8$1$426ec26880ace018f1038aad21ee6326$c3b412ce7b7beda24d32fba66b2faed7c479d7d16a4baa303205fbcce358255c6361b2d7b7b2debbe1cc4970a0ed0d6df0a6dce39d0405b69fdf866dc32dcab6',
+  'super_admin',
+  true
+)
+ON CONFLICT (username) DO NOTHING;
+
+-- ─── 4. ตาราง property_change_logs (ประวัติการแก้ไขข้อมูลที่พัก) ───────────
 
 CREATE TABLE IF NOT EXISTS property_change_logs (
   id             SERIAL PRIMARY KEY,
   property_id    INTEGER     NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
   house_id       TEXT        NOT NULL,
-  actor_username TEXT        NOT NULL,
+  actor_user_id  INTEGER REFERENCES admin_users(id) ON DELETE SET NULL,
+  actor_username_snapshot TEXT NOT NULL DEFAULT '',
   action         TEXT        NOT NULL CHECK (action IN ('create', 'update')),
   changed_fields JSONB       NOT NULL DEFAULT '[]'::jsonb,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE property_change_logs
+  ADD COLUMN IF NOT EXISTS actor_user_id INTEGER REFERENCES admin_users(id) ON DELETE SET NULL;
+
+ALTER TABLE property_change_logs
+  ADD COLUMN IF NOT EXISTS actor_username_snapshot TEXT NOT NULL DEFAULT '';
+
+-- Backfill from legacy column actor_username when migrating old schema
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'property_change_logs'
+      AND column_name = 'actor_username'
+  ) THEN
+    UPDATE property_change_logs
+    SET actor_username_snapshot = actor_username
+    WHERE actor_username_snapshot = '' AND actor_username IS NOT NULL;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_property_change_logs_property_id
   ON property_change_logs(property_id);
 
 CREATE INDEX IF NOT EXISTS idx_property_change_logs_created_at
   ON property_change_logs(created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_property_change_logs_actor_user_id
+  ON property_change_logs(actor_user_id);
 
 GRANT ALL ON property_change_logs TO web_anon;
 GRANT USAGE, SELECT ON SEQUENCE property_change_logs_id_seq TO web_anon;

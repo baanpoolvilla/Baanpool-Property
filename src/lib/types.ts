@@ -47,13 +47,24 @@ export interface PropertyChangeLog {
   id: number;
   property_id: number;
   house_id: string;
-  actor_username: string;
+  actor_user_id: number | null;
+  actor_username_snapshot: string;
   action: "create" | "update";
   changed_fields: PropertyChangeField[];
   created_at: string;
 }
 
 export type PropertyChangeLogInsert = Omit<PropertyChangeLog, "id" | "created_at">;
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  password_hash: string;
+  role: "super_admin" | "editor";
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 // ─── Section Config ────────────────────────────────────────────────────────
 

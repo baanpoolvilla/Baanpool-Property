@@ -35,7 +35,8 @@ export async function POST(request: Request) {
       .insert({
         property_id: body.propertyId,
         house_id: body.houseId,
-        actor_username: session.username,
+        actor_user_id: session.userId,
+        actor_username_snapshot: session.username,
         action: body.action,
         changed_fields: body.changedFields ?? [],
       });
