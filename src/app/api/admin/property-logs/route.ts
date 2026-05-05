@@ -1,18 +1,12 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { ADMIN_SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import type { PropertyChangeField } from "@/lib/types";
 
 export async function POST(request: Request) {
-  const cookieHeader = request.headers.get("cookie") || "";
-  const token = cookieHeader
-    .split(";")
-    .map((part) => part.trim())
-    .find((part) => part.startsWith(`${ADMIN_SESSION_COOKIE}=`))
-    ?.split("=")
-    .slice(1)
-    .join("=");
-
+  const cookieStore = await cookies();
+  const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
   const session = await verifySessionToken(token || null);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

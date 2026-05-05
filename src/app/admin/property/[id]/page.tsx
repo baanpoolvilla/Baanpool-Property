@@ -225,13 +225,18 @@ export default function PropertyFormPage() {
       }
 
       try {
-        await fetch("/api/admin/property-logs", {
+        const response = await fetch("/api/admin/property-logs", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
         });
+
+        if (!response.ok) {
+          const errorBody = (await response.json().catch(() => ({}))) as { error?: string };
+          console.error("Failed to record property change log", errorBody.error || response.statusText);
+        }
       } catch (error) {
         console.error("Failed to record property change log", error);
       }
