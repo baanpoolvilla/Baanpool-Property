@@ -1,5 +1,5 @@
 -- ============================================================
--- SQL Script: สร้างตาราง property_notes และ property_disputes
+-- SQL Script: สร้างตาราง property_notes, property_disputes และ property_change_logs
 -- รัน Query นี้ใน DBeaver หรือ SQL Editor ของคุณ
 -- ============================================================
 
@@ -42,6 +42,42 @@ BEGIN
   ) THEN
     CREATE POLICY "Allow all access to property_notes"
       ON property_notes FOR ALL
+      USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+
+-- ─── 3. ตาราง property_change_logs (ประวัติการแก้ไขข้อมูลที่พัก) ───────────
+
+CREATE TABLE IF NOT EXISTS property_change_logs (
+  id             SERIAL PRIMARY KEY,
+  property_id    INTEGER     NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+  house_id       TEXT        NOT NULL,
+  actor_username TEXT        NOT NULL,
+  action         TEXT        NOT NULL CHECK (action IN ('create', 'update')),
+  changed_fields JSONB       NOT NULL DEFAULT '[]'::jsonb,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_property_change_logs_property_id
+  ON property_change_logs(property_id);
+
+CREATE INDEX IF NOT EXISTS idx_property_change_logs_created_at
+  ON property_change_logs(created_at DESC);
+
+GRANT ALL ON property_change_logs TO web_anon;
+GRANT USAGE, SELECT ON SEQUENCE property_change_logs_id_seq TO web_anon;
+
+ALTER TABLE property_change_logs ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = 'property_change_logs'
+    AND policyname = 'Allow all access to property_change_logs'
+  ) THEN
+    CREATE POLICY "Allow all access to property_change_logs"
+      ON property_change_logs FOR ALL
       USING (true) WITH CHECK (true);
   END IF;
 END $$;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -41,7 +41,7 @@ import {
   updateProperty,
 } from "@/lib/api";
 import { SECTIONS } from "@/lib/constants";
-import type { Property, PropertyField } from "@/lib/types";
+import type { Property, PropertyChangeField, PropertyField } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +75,10 @@ const sectionIcons: Record<string, React.ReactNode> = {
   contact: <Phone className="h-4 w-4" />,
 };
 
+function areValuesEqual(left: unknown, right: unknown) {
+  return JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
+}
+
 export default function PropertyFormPage() {
   const params = useParams();
   const router = useRouter();
@@ -92,6 +96,9 @@ export default function PropertyFormPage() {
     new Set(SECTIONS.map((s) => s.key))
   );
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
+  const lastPersistedRef = useRef<{ house_id: string; data: Record<string, unknown> } | null>(
+    isNew ? { house_id: "", data: {} } : null
+  );
 
   // Load existing property
   useEffect(() => {
@@ -105,6 +112,7 @@ export default function PropertyFormPage() {
           setProperty(p);
           setHouseId(p.house_id);
           setData(p.data ?? {});
+          lastPersistedRef.current = { house_id: p.house_id, data: p.data ?? {} };
           // enable auto-save after initial load
           setTimeout(() => setAutoSaveEnabled(true), 1000);
         } else {
@@ -153,9 +161,83 @@ export default function PropertyFormPage() {
     return ordered;
   }, [fields]);
 
+  const fieldLabelMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const field of fields) {
+      map.set(field.field_key, field.label);
+    }
+    return map;
+  }, [fields]);
+
   const handleFieldChange = useCallback((key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
   }, []);
+
+  const buildChangedFields = useCallback(
+    (
+      before: { house_id: string; data: Record<string, unknown> },
+      after: { house_id: string; data: Record<string, unknown> }
+    ): PropertyChangeField[] => {
+      const changedFields: PropertyChangeField[] = [];
+
+      if (before.house_id !== after.house_id) {
+        changedFields.push({
+          field_key: "house_id",
+          label: "รหัสบ้าน",
+          old_value: before.house_id || null,
+          new_value: after.house_id || null,
+        });
+      }
+
+      const allKeys = new Set([
+        ...Object.keys(before.data),
+        ...Object.keys(after.data),
+      ]);
+
+      for (const key of allKeys) {
+        const oldValue = before.data[key];
+        const newValue = after.data[key];
+
+        if (areValuesEqual(oldValue, newValue)) continue;
+
+        changedFields.push({
+          field_key: key,
+          label: fieldLabelMap.get(key) ?? key,
+          old_value: oldValue ?? null,
+          new_value: newValue ?? null,
+        });
+      }
+
+      return changedFields;
+    },
+    [fieldLabelMap]
+  );
+
+  const recordChangeLog = useCallback(
+    async (payload: {
+      propertyId: number;
+      houseId: string;
+      action: "create" | "update";
+      changedFields: PropertyChangeField[];
+    }) => {
+      if (payload.action === "update" && payload.changedFields.length === 0) {
+        return;
+      }
+
+      try {
+        await fetch("/api/admin/property-logs", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+      } catch (error) {
+        console.error("Failed to record property change log", error);
+      }
+    },
+    []
+  );
 
   const toggleSection = (key: string) => {
     setOpenSections((prev) => {
@@ -170,9 +252,27 @@ export default function PropertyFormPage() {
   const handleAutoSave = useCallback(
     async (formData: Record<string, unknown>) => {
       if (!propertyId) return;
+
+      const beforeSnapshot =
+        lastPersistedRef.current ??
+        ({ house_id: houseId.trim() || property?.house_id || "", data: {} } as const);
+      const afterSnapshot = {
+        house_id: beforeSnapshot.house_id,
+        data: formData,
+      };
+
       await updateProperty(propertyId, { data: formData });
+
+      await recordChangeLog({
+        propertyId,
+        houseId: afterSnapshot.house_id,
+        action: "update",
+        changedFields: buildChangedFields(beforeSnapshot, afterSnapshot),
+      });
+
+      lastPersistedRef.current = afterSnapshot;
     },
-    [propertyId]
+    [buildChangedFields, houseId, property?.house_id, propertyId, recordChangeLog]
   );
 
   const { saving: autoSaving, lastSaved } = useAutoSave(
@@ -209,17 +309,51 @@ export default function PropertyFormPage() {
     setSubmitting(true);
     try {
       if (isNew) {
-        await createProperty({
+        const created = await createProperty({
           house_id: houseId.trim(),
           data,
         });
+
+        const createdSnapshot = {
+          house_id: created.house_id,
+          data: created.data ?? {},
+        };
+
+        await recordChangeLog({
+          propertyId: created.id,
+          houseId: created.house_id,
+          action: "create",
+          changedFields: buildChangedFields(
+            { house_id: "", data: {} },
+            createdSnapshot
+          ),
+        });
+
+        lastPersistedRef.current = createdSnapshot;
         toast.success("สร้างที่พักเรียบร้อย!");
         router.push("/admin");
       } else if (propertyId) {
+        const beforeSnapshot =
+          lastPersistedRef.current ??
+          ({ house_id: property?.house_id || "", data: property?.data ?? {} } as const);
+        const afterSnapshot = {
+          house_id: houseId.trim(),
+          data,
+        };
+
         await updateProperty(propertyId, {
           house_id: houseId.trim(),
           data,
         });
+
+        await recordChangeLog({
+          propertyId,
+          houseId: afterSnapshot.house_id,
+          action: "update",
+          changedFields: buildChangedFields(beforeSnapshot, afterSnapshot),
+        });
+
+        lastPersistedRef.current = afterSnapshot;
         toast.success("บันทึกเรียบร้อย!");
         router.push("/admin");
       }

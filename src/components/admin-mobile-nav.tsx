@@ -2,11 +2,13 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Building2,
   LayoutGrid,
+  Loader2,
   Menu,
+  LogOut,
   Plus,
   Settings2,
   StickyNote,
@@ -16,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { toast } from "sonner";
 
 const navItems = [
   { href: "/admin", label: "รายการที่พัก", icon: Building2 },
@@ -26,7 +29,23 @@ const navItems = [
 
 export function AdminMobileNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setOpen(false);
+      router.push("/admin/login");
+      router.refresh();
+    } catch {
+      toast.error("ออกจากระบบไม่สำเร็จ");
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   return (
     <div className="md:hidden flex items-center justify-between border-b px-4 py-3">
@@ -87,6 +106,15 @@ export function AdminMobileNav() {
                 เพิ่มที่พัก
               </Button>
             </Link>
+            <Button
+              variant="outline"
+              className="mt-3 w-full gap-2"
+              onClick={handleLogout}
+              disabled={loggingOut}
+            >
+              {loggingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+              ออกจากระบบ
+            </Button>
           </div>
         </SheetContent>
       </Sheet>

@@ -6,6 +6,7 @@ import type {
   PropertyFieldUpdate,
   PropertyInsert,
   PropertyUpdate,
+  PropertyChangeLog,
   PropertyNote,
   PropertyNoteInsert,
   PropertyNoteUpdate,
@@ -169,6 +170,19 @@ export async function searchProperties(
 
   if (error) throw new Error(error.message);
   return data as Property[];
+}
+
+export async function fetchPropertyChangeLogs(
+  propertyId: number
+): Promise<PropertyChangeLog[]> {
+  const { data, error } = await supabase
+    .from("property_change_logs")
+    .select("*")
+    .eq("property_id", propertyId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data as PropertyChangeLog[];
 }
 
 // ─── Property Notes ────────────────────────────────────────────────────────

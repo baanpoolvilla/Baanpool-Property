@@ -36,6 +36,25 @@ export interface Property {
 export type PropertyInsert = Omit<Property, "id" | "created_at" | "updated_at">;
 export type PropertyUpdate = Partial<PropertyInsert>;
 
+export interface PropertyChangeField {
+  field_key: string;
+  label: string;
+  old_value: unknown;
+  new_value: unknown;
+}
+
+export interface PropertyChangeLog {
+  id: number;
+  property_id: number;
+  house_id: string;
+  actor_username: string;
+  action: "create" | "update";
+  changed_fields: PropertyChangeField[];
+  created_at: string;
+}
+
+export type PropertyChangeLogInsert = Omit<PropertyChangeLog, "id" | "created_at">;
+
 // ─── Section Config ────────────────────────────────────────────────────────
 
 export interface SectionConfig {

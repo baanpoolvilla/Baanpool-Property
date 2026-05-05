@@ -344,7 +344,7 @@ export default function PropertyListPage() {
                         <TableCell className="hidden lg:table-cell">
                           {p.updated_at ? (
                             <Link
-                              href={`/admin/property/${p.id}`}
+                              href={`/admin/property/${p.id}/logs`}
                               onClick={(e) => e.stopPropagation()}
                               className="flex items-center gap-1 text-xs text-primary hover:underline"
                             >
