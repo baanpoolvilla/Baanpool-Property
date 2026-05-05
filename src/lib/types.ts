@@ -49,6 +49,7 @@ export interface PropertyChangeLog {
   house_id: string;
   actor_user_id: number | null;
   actor_username_snapshot: string;
+  actor_username?: string | null;
   action: "create" | "update";
   changed_fields: PropertyChangeField[];
   created_at: string;

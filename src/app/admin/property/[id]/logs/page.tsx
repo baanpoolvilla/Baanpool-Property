@@ -154,7 +154,9 @@ export default function PropertyLogsPage() {
                       </Badge>
                       <span className="flex items-center gap-1 text-sm font-normal text-muted-foreground">
                         <UserRound className="h-4 w-4" />
-                        {log.actor_username_snapshot}
+                        {log.actor_username_snapshot?.trim() ||
+                          log.actor_username?.trim() ||
+                          (log.actor_user_id ? `User #${log.actor_user_id}` : "ไม่ทราบผู้แก้ไข")}
                       </span>
                     </div>
                     <span className="flex items-center gap-1 text-sm font-normal text-muted-foreground">
