@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Building2,
+  ClipboardList,
   LayoutGrid,
   Loader2,
   Menu,
@@ -21,6 +22,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { toast } from "sonner";
 
 const navItems = [
+  { href: "/admin/dashboard", label: "Dashboard", icon: ClipboardList },
   { href: "/admin", label: "รายการที่พัก", icon: Building2 },
   { href: "/admin/notes", label: "บันทึกหมายเหตุ", icon: StickyNote },
   { href: "/admin/disputes", label: "คำถามที่พบบ่อย", icon: HelpCircle },

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Building2,
+  ClipboardList,
   LayoutGrid,
   Settings2,
   Plus,
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 const navItems = [
+  { href: "/admin/dashboard", label: "Dashboard", icon: ClipboardList },
   { href: "/admin", label: "รายการที่พัก", icon: Building2 },
   { href: "/admin/notes", label: "บันทึกหมายเหตุ", icon: StickyNote },
   { href: "/admin/disputes", label: "คำถามที่พบบ่อย", icon: HelpCircle },

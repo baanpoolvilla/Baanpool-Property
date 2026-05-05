@@ -52,12 +52,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+type PresetFilter = "all" | "updated_today" | "low_completeness" | "complete";
+
 export default function PropertyListPage() {
   const router = useRouter();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [presetFilter, setPresetFilter] = useState<PresetFilter>("all");
   const { fields } = usePropertyFields(true);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const preset = new URLSearchParams(window.location.search).get("preset");
+    if (preset === "updated_today" || preset === "low_completeness" || preset === "complete") {
+      setPresetFilter(preset);
+    } else {
+      setPresetFilter("all");
+    }
+  }, []);
 
   const getCompletenessPercent = (data: Record<string, unknown>) => {
     const activeFields = fields.filter((f) => f.is_active);
@@ -83,6 +96,16 @@ export default function PropertyListPage() {
     }
 
     return null;
+  };
+
+  const isUpdatedToday = (isoDate: string) => {
+    const target = new Date(isoDate);
+    const now = new Date();
+    return (
+      target.getFullYear() === now.getFullYear() &&
+      target.getMonth() === now.getMonth() &&
+      target.getDate() === now.getDate()
+    );
   };
 
   // ─── Export helpers ────────────────────────────────────────────────
@@ -155,14 +178,24 @@ export default function PropertyListPage() {
       const data = search.trim()
         ? await searchProperties(search.trim())
         : await fetchProperties();
+      let filtered = data;
+
+      if (presetFilter === "updated_today") {
+        filtered = filtered.filter((p) => isUpdatedToday(p.updated_at));
+      } else if (presetFilter === "low_completeness") {
+        filtered = filtered.filter((p) => getCompletenessPercent(p.data) < 80);
+      } else if (presetFilter === "complete") {
+        filtered = filtered.filter((p) => getCompletenessPercent(p.data) >= 80);
+      }
+
       // เรียง id น้อยไปมาก
-      setProperties(data.sort((a, b) => a.id - b.id));
+      setProperties(filtered.sort((a, b) => a.id - b.id));
     } catch (err) {
       toast.error("ไม่สามารถโหลดรายการที่พักได้");
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, presetFilter, fields]);
 
   useEffect(() => {
     const t = setTimeout(load, search ? 300 : 0);
@@ -228,14 +261,28 @@ export default function PropertyListPage() {
         </div>
 
         {/* Search */}
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="ค้นหาด้วยรหัสบ้านหรือชื่อ…"
-            className="pl-10"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative max-w-sm w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="ค้นหาด้วยรหัสบ้านหรือชื่อ…"
+              className="pl-10"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          {presetFilter !== "all" && (
+            <>
+              <Badge variant="outline" className="h-9 px-3 flex items-center">
+                {presetFilter === "updated_today" && "แสดงเฉพาะ: บ้านที่อัปเดตวันนี้"}
+                {presetFilter === "low_completeness" && "แสดงเฉพาะ: % ต่ำกว่า 80"}
+                {presetFilter === "complete" && "แสดงเฉพาะ: บ้านที่สมบูรณ์"}
+              </Badge>
+              <Link href="/admin">
+                <Button variant="ghost" size="sm">ล้างตัวกรอง</Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Table */}
