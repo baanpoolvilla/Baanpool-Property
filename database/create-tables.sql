@@ -84,15 +84,12 @@ CREATE POLICY "Allow select admin_users"
   ON admin_users FOR SELECT
   USING (true);
 
--- default admin seed: username=admin / password=Baanpool@2026
-INSERT INTO admin_users (username, password_hash, role, is_active)
-VALUES (
-  'admin',
-  'scrypt$16384$8$1$426ec26880ace018f1038aad21ee6326$c3b412ce7b7beda24d32fba66b2faed7c479d7d16a4baa303205fbcce358255c6361b2d7b7b2debbe1cc4970a0ed0d6df0a6dce39d0405b69fdf866dc32dcab6',
-  'super_admin',
-  true
-)
-ON CONFLICT (username) DO NOTHING;
+-- NOTE: Do not store real credentials in Git.
+-- Create admin users manually with a generated password hash.
+-- Example:
+-- INSERT INTO admin_users (username, password_hash, role, is_active)
+-- VALUES ('admin', '<GENERATED_SCRYPT_HASH>', 'super_admin', true)
+-- ON CONFLICT (username) DO NOTHING;
 
 -- ─── 4. ตาราง property_change_logs (ประวัติการแก้ไขข้อมูลที่พัก) ───────────
 
