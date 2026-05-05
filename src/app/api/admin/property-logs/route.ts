@@ -24,6 +24,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
+    const changedFields = body.changedFields ?? [];
+
+    // De-dup guard: auto-save and manual save can fire almost simultaneously.
+    // If the latest log has the same action + payload within 15 seconds, skip insert.
+    const { data: latestLogs } = await supabase
+      .from("property_change_logs")
+      .select("action, changed_fields, created_at")
+      .eq("property_id", body.propertyId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const latest = latestLogs?.[0] as
+      | { action?: string; changed_fields?: unknown; created_at?: string }
+      | undefined;
+    if (latest?.created_at && latest.action === body.action) {
+      const samePayload = JSON.stringify(latest.changed_fields ?? []) === JSON.stringify(changedFields);
+      const elapsedMs = Date.now() - new Date(latest.created_at).getTime();
+      if (samePayload && elapsedMs >= 0 && elapsedMs <= 15_000) {
+        return NextResponse.json({ ok: true, deduped: true });
+      }
+    }
+
     // Try new schema first (actor_user_id + actor_username_snapshot).
     const primary = await supabase
       .from("property_change_logs")
@@ -33,7 +55,7 @@ export async function POST(request: Request) {
         actor_user_id: session.userId,
         actor_username_snapshot: session.username,
         action: body.action,
-        changed_fields: body.changedFields ?? [],
+        changed_fields: changedFields,
       });
 
     if (primary.error) {
@@ -45,7 +67,7 @@ export async function POST(request: Request) {
           house_id: body.houseId,
           actor_username: session.username,
           action: body.action,
-          changed_fields: body.changedFields ?? [],
+          changed_fields: changedFields,
         });
 
       if (fallback.error) {
