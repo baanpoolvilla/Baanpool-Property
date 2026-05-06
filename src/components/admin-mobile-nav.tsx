@@ -65,7 +65,7 @@ export function AdminMobileNav() {
           <div className="flex items-center justify-between px-6 py-5 border-b">
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-5 w-5 text-primary" />
-              <span className="font-semibold">Baanpool Admin</span>
+              <span className="font-semibold">Prop Data-BPV</span>
             </div>
             <Button
               variant="ghost"

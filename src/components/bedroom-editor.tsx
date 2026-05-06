@@ -230,7 +230,7 @@ export function BedroomEditor({ value, onChange }: BedroomEditorProps) {
                           <div key={bed.id} className="flex items-center gap-2">
                             <Select
                               value={bed.type}
-                              onValueChange={(v) => updateBed(room.id, bed.id, { type: v })}
+                              onValueChange={(v) => updateBed(room.id, bed.id, { type: v ?? undefined })}
                             >
                               <SelectTrigger className="h-8 text-sm flex-1">
                                 <SelectValue />
@@ -245,7 +245,7 @@ export function BedroomEditor({ value, onChange }: BedroomEditorProps) {
                             </Select>
                             <Select
                               value={bed.size}
-                              onValueChange={(v) => updateBed(room.id, bed.id, { size: v })}
+                              onValueChange={(v) => updateBed(room.id, bed.id, { size: v ?? undefined })}
                             >
                               <SelectTrigger className="h-8 text-sm w-28">
                                 <SelectValue />

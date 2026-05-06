@@ -52,7 +52,7 @@ function AdminLoginForm() {
               <LayoutGrid className="h-6 w-6" />
             </div>
             <div>
-              <CardTitle className="text-2xl">Baanpool Admin</CardTitle>
+              <CardTitle className="text-2xl">Prop Data-BPV</CardTitle>
               <CardDescription>เข้าสู่ระบบเพื่อจัดการข้อมูลที่พักและดูประวัติการแก้ไข</CardDescription>
             </div>
           </CardHeader>

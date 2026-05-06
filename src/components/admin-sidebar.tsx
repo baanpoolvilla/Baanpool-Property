@@ -32,7 +32,7 @@ export function AdminSidebar() {
       {/* Brand */}
       <div className="flex items-center gap-2 px-6 py-5">
         <LayoutGrid className="h-6 w-6 text-primary" />
-        <span className="font-semibold text-lg">Baanpool Admin</span>
+        <span className="font-semibold text-lg">Prop Data-BPV</span>
       </div>
 
       <Separator />
