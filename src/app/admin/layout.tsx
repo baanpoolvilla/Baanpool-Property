@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "PropAdmin — Property Management",
+  title: "Prop Data-BPV",
   description: "Dynamic admin property management system",
 };
 

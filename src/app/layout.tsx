@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PropAdmin — Property Management",
+  title: "Prop Data-BPV",
   description: "Dynamic admin property management system",
 };
 
