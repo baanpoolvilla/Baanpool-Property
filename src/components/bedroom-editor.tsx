@@ -18,11 +18,16 @@ import { Textarea } from "@/components/ui/textarea";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
+export interface BedItem {
+  id: string;
+  type: string;
+  size: string;
+}
+
 export interface BedroomRoom {
   id: string;
   name: string;
-  bed_type: string;
-  bed_count: number;
+  beds: BedItem[];
   has_ac: boolean;
   has_tv: boolean;
   has_wardrobe: boolean;
@@ -46,11 +51,19 @@ const BED_TYPES = [
   "โซฟาเบด",
 ];
 
+const BED_SIZES = [
+  "3 ฟุต",
+  "3.5 ฟุต",
+  "4 ฟุต",
+  "5 ฟุต",
+  "6 ฟุต",
+];
+
 const AMENITY_ITEMS: { key: keyof Pick<BedroomRoom, "has_ac" | "has_tv" | "has_wardrobe" | "has_ensuite">; label: string }[] = [
   { key: "has_ac", label: "แอร์" },
   { key: "has_tv", label: "ทีวี" },
   { key: "has_wardrobe", label: "ตู้เสื้อผ้า" },
-  { key: "has_ensuite", label: "ห้องน้ำในห้อง" },
+  { key: "has_ensuite", label: "ห้องน้ำส่วนตัว" },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────
@@ -73,8 +86,7 @@ export function BedroomEditor({ value, onChange }: BedroomEditorProps) {
     const newRoom: BedroomRoom = {
       id: newId,
       name: `ห้องนอนที่ ${rooms.length + 1}`,
-      bed_type: "เตียงคู่",
-      bed_count: 1,
+      beds: [{ id: `bed_${Date.now()}`, type: "เตียงคู่", size: "5 ฟุต" }],
       has_ac: true,
       has_tv: false,
       has_wardrobe: false,
@@ -92,6 +104,25 @@ export function BedroomEditor({ value, onChange }: BedroomEditorProps) {
 
   const updateRoom = (id: string, patch: Partial<BedroomRoom>) => {
     onChange(rooms.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  };
+
+  const addBed = (roomId: string) => {
+    const room = rooms.find((r) => r.id === roomId);
+    if (!room) return;
+    const newBed: BedItem = { id: `bed_${Date.now()}`, type: "เตียงคู่", size: "5 ฟุต" };
+    updateRoom(roomId, { beds: [...(room.beds ?? []), newBed] });
+  };
+
+  const removeBed = (roomId: string, bedId: string) => {
+    const room = rooms.find((r) => r.id === roomId);
+    if (!room) return;
+    updateRoom(roomId, { beds: room.beds.filter((b) => b.id !== bedId) });
+  };
+
+  const updateBed = (roomId: string, bedId: string, patch: Partial<BedItem>) => {
+    const room = rooms.find((r) => r.id === roomId);
+    if (!room) return;
+    updateRoom(roomId, { beds: room.beds.map((b) => (b.id === bedId ? { ...b, ...patch } : b)) });
   };
 
   return (
@@ -146,13 +177,12 @@ export function BedroomEditor({ value, onChange }: BedroomEditorProps) {
                   <span className="font-medium text-sm flex-1">
                     {room.name || `ห้องนอนที่ ${index + 1}`}
                   </span>
-                  <div className="hidden sm:flex gap-1">
-                    <Badge variant="outline" className="text-xs">
-                      {room.bed_type}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {room.bed_count} เตียง
-                    </Badge>
+                  <div className="hidden sm:flex gap-1 flex-wrap">
+                    {(room.beds ?? []).map((bed) => (
+                      <Badge key={bed.id} variant="outline" className="text-xs">
+                        {bed.type} {bed.size}
+                      </Badge>
+                    ))}
                     {room.has_ac && (
                       <Badge variant="secondary" className="text-xs">
                         แอร์
@@ -160,7 +190,7 @@ export function BedroomEditor({ value, onChange }: BedroomEditorProps) {
                     )}
                     {room.has_ensuite && (
                       <Badge variant="secondary" className="text-xs">
-                        ห้องน้ำใน
+                        ห้องน้ำส่วนตัว
                       </Badge>
                     )}
                   </div>
@@ -192,40 +222,63 @@ export function BedroomEditor({ value, onChange }: BedroomEditorProps) {
                       />
                     </div>
 
-                    {/* Row 2: Bed type + count */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">ประเภทเตียง</Label>
-                        <Select
-                          value={room.bed_type}
-                          onValueChange={(v) => updateRoom(room.id, { bed_type: v ?? room.bed_type })}
+                    {/* Row 2: Beds list */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">เตียง</Label>
+                      <div className="space-y-2">
+                        {(room.beds ?? []).map((bed) => (
+                          <div key={bed.id} className="flex items-center gap-2">
+                            <Select
+                              value={bed.type}
+                              onValueChange={(v) => updateBed(room.id, bed.id, { type: v })}
+                            >
+                              <SelectTrigger className="h-8 text-sm flex-1">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {BED_TYPES.map((t) => (
+                                  <SelectItem key={t} value={t} className="text-sm">
+                                    {t}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Select
+                              value={bed.size}
+                              onValueChange={(v) => updateBed(room.id, bed.id, { size: v })}
+                            >
+                              <SelectTrigger className="h-8 text-sm w-28">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {BED_SIZES.map((s) => (
+                                  <SelectItem key={s} value={s} className="text-sm">
+                                    {s}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                              onClick={() => removeBed(room.id, bed.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 text-xs w-full"
+                          onClick={() => addBed(room.id)}
                         >
-                          <SelectTrigger className="h-8 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {BED_TYPES.map((t) => (
-                              <SelectItem key={t} value={t} className="text-sm">
-                                {t}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">จำนวนเตียง</Label>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={10}
-                          value={room.bed_count}
-                          onChange={(e) =>
-                            updateRoom(room.id, {
-                              bed_count: Math.max(1, Number(e.target.value) || 1),
-                            })
-                          }
-                          className="h-8 text-sm"
-                        />
+                          <Plus className="h-3.5 w-3.5" />
+                          เพิ่มเตียง
+                        </Button>
                       </div>
                     </div>
 

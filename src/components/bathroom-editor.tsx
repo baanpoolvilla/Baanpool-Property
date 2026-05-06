@@ -90,7 +90,7 @@ export function BathroomEditor({ value, onChange }: BathroomEditorProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bath className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">รายละเอียดห้องน้ำ</span>
+          <span className="text-sm font-medium">รายละเอียดห้องน้ำ(เฉพาะด้านนอก)</span>
           {rooms.length > 0 && (
             <Badge variant="secondary" className="text-xs">
               {rooms.length} ห้อง
