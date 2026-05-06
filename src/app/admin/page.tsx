@@ -321,7 +321,7 @@ export default function PropertyListPage() {
                         ที่ตั้ง
                       </TableHead>
                       <TableHead className="hidden lg:table-cell">
-                        ผู้เข้าพัก
+                        ผู้เข้าพักสูงสุด
                       </TableHead>
                       <TableHead className="hidden xl:table-cell w-28">
                         ความคืบหน้า
