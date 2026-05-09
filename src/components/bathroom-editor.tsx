@@ -34,7 +34,7 @@ interface BathroomEditorProps {
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
-const FLOOR_OPTIONS = ["ชั้น G (ล่าง)", "ชั้น 1", "ชั้น 2", "ชั้น 3", "ชั้น Rooftop"];
+const FLOOR_OPTIONS = ["ชั้น 1", "ชั้น 2", "ชั้น 3"];
 
 const AMENITY_ITEMS: {
   key: keyof Pick<BathroomDetail, "is_ensuite" | "has_shower" | "has_bathtub" | "has_water_heater">;
