@@ -2,6 +2,7 @@
 
 import React from "react";
 import { PropertyField } from "@/lib/types";
+import { FIELDS_EXCLUDED_FROM_SCORE } from "@/lib/constants";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
@@ -11,7 +12,9 @@ interface CompletenessScoreProps {
 }
 
 export function CompletenessScore({ fields, data }: CompletenessScoreProps) {
-  const activeFields = fields.filter((f) => f.is_active);
+  const activeFields = fields.filter(
+    (f) => f.is_active && !FIELDS_EXCLUDED_FROM_SCORE.includes(f.field_key)
+  );
   if (activeFields.length === 0) return null;
 
   const filledCount = activeFields.filter((f) => {

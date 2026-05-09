@@ -17,6 +17,11 @@ export const SECTIONS: SectionConfig[] = [
   { key: "contact", label: "ผู้ดูแล / ติดต่อ", icon: "phone", order: 11 },
 ];
 
+// Fields excluded from completeness score calculation
+export const FIELDS_EXCLUDED_FROM_SCORE: string[] = [
+  "parking_ev_charger",
+];
+
 export const FIELD_TYPES = [
   { value: "text", label: "ข้อความ" },
   { value: "number", label: "ตัวเลข" },
