@@ -20,6 +20,8 @@ export const SECTIONS: SectionConfig[] = [
 // Fields excluded from completeness score calculation
 export const FIELDS_EXCLUDED_FROM_SCORE: string[] = [
   "parking_ev_charger",
+  "ev_charger_available",
+  "ev_charger_details",
 ];
 
 export const FIELD_TYPES = [

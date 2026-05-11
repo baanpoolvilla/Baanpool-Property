@@ -131,6 +131,36 @@ describe("CompletenessScore Component", () => {
     expect(screen.getByText("33% สมบูรณ์")).toBeInTheDocument();
   });
 
+  it("excludes EV charger fields from completeness score", () => {
+    const fields = [
+      makeField("house_name"),
+      makeField("ev_charger_available", {
+        id: 2,
+        field_key: "ev_charger_available",
+        type: "boolean",
+      }),
+      makeField("ev_charger_details", {
+        id: 3,
+        field_key: "ev_charger_details",
+        type: "textarea",
+      }),
+    ];
+
+    render(
+      <CompletenessScore
+        fields={fields}
+        data={{
+          house_name: "Villa A",
+          ev_charger_available: false,
+          ev_charger_details: "Type 2 / 7kW",
+        }}
+      />
+    );
+
+    expect(screen.getByText("100% สมบูรณ์")).toBeInTheDocument();
+    expect(screen.getByText("กรอกแล้ว 1/1 รายการ")).toBeInTheDocument();
+  });
+
   it("applies green color for >= 80%", () => {
     const fields = [makeField("a")];
     render(<CompletenessScore fields={fields} data={{ a: "filled" }} />);
