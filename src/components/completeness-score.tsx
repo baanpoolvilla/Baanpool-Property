@@ -2,7 +2,7 @@
 
 import React from "react";
 import { PropertyField } from "@/lib/types";
-import { FIELDS_EXCLUDED_FROM_SCORE } from "@/lib/constants";
+import { calculateCompleteness } from "@/lib/completeness";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
@@ -12,19 +12,8 @@ interface CompletenessScoreProps {
 }
 
 export function CompletenessScore({ fields, data }: CompletenessScoreProps) {
-  const activeFields = fields.filter(
-    (f) => f.is_active && !FIELDS_EXCLUDED_FROM_SCORE.includes(f.field_key)
-  );
-  if (activeFields.length === 0) return null;
-
-  const filledCount = activeFields.filter((f) => {
-    const v = data[f.field_key];
-    if (v === undefined || v === null || v === "") return false;
-    if (Array.isArray(v) && v.length === 0) return false;
-    return true;
-  }).length;
-
-  const pct = Math.round((filledCount / activeFields.length) * 100);
+  const { percent: pct, filledCount, totalCount } = calculateCompleteness(fields, data);
+  if (totalCount === 0) return null;
 
   const color =
     pct >= 80 ? "text-green-600" : pct >= 50 ? "text-yellow-600" : "text-red-600";
@@ -36,7 +25,7 @@ export function CompletenessScore({ fields, data }: CompletenessScoreProps) {
         {pct}% สมบูรณ์
       </Badge>
       <span className="text-xs text-muted-foreground">
-        กรอกแล้ว {filledCount}/{activeFields.length} รายการ
+        กรอกแล้ว {filledCount}/{totalCount} รายการ
       </span>
     </div>
   );

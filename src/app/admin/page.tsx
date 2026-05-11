@@ -21,6 +21,7 @@ import {
 import { AdminShell } from "@/components/admin-shell";
 import { usePropertyFields } from "@/hooks/use-property-fields";
 import { deleteProperty, fetchProperties, searchProperties } from "@/lib/api";
+import { calculateCompleteness } from "@/lib/completeness";
 import type { Property } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,17 +74,7 @@ export default function PropertyListPage() {
   }, []);
 
   const getCompletenessPercent = (data: Record<string, unknown>) => {
-    const activeFields = fields.filter((f) => f.is_active);
-    if (activeFields.length === 0) return 0;
-
-    const filledCount = activeFields.filter((f) => {
-      const v = data[f.field_key];
-      if (v === undefined || v === null || v === "") return false;
-      if (Array.isArray(v) && v.length === 0) return false;
-      return true;
-    }).length;
-
-    return Math.round((filledCount / activeFields.length) * 100);
+    return calculateCompleteness(fields, data).percent;
   };
 
   const getPropertyZone = (data: Record<string, unknown>) => {

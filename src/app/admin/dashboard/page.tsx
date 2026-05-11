@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { fetchAllPropertyNotes, fetchProperties } from "@/lib/api";
+import { calculateCompleteness } from "@/lib/completeness";
 import { usePropertyFields } from "@/hooks/use-property-fields";
 import type { Property, PropertyNote } from "@/lib/types";
 
@@ -37,17 +38,7 @@ export default function DashboardPage() {
   const { fields } = usePropertyFields(true);
 
   const getCompletenessPercent = (data: Record<string, unknown>) => {
-    const activeFields = fields.filter((f) => f.is_active);
-    if (activeFields.length === 0) return 0;
-
-    const filledCount = activeFields.filter((f) => {
-      const v = data[f.field_key];
-      if (v === undefined || v === null || v === "") return false;
-      if (Array.isArray(v) && v.length === 0) return false;
-      return true;
-    }).length;
-
-    return Math.round((filledCount / activeFields.length) * 100);
+    return calculateCompleteness(fields, data).percent;
   };
 
   useEffect(() => {
