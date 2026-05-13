@@ -418,7 +418,7 @@ export default function PropertyFormPage() {
             {/* Completeness */}
             <Card>
               <CardContent className="pt-6">
-                <CompletenessScore fields={fields} data={data} />
+                <CompletenessScore fields={fields} data={{ ...data, house_id: houseId }} />
               </CardContent>
             </Card>
 
