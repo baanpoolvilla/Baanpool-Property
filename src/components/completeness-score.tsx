@@ -16,7 +16,7 @@ export function CompletenessScore({ fields, data }: CompletenessScoreProps) {
   if (totalCount === 0) return null;
 
   const color =
-    pct >= 80 ? "text-green-600" : pct >= 50 ? "text-yellow-600" : "text-red-600";
+    pct >= 90 ? "text-green-600" : pct >= 60 ? "text-yellow-600" : "text-red-600";
 
   return (
     <div className="flex items-center gap-3">

@@ -73,8 +73,8 @@ export default function PropertyListPage() {
     }
   }, []);
 
-  const getCompletenessPercent = (data: Record<string, unknown>) => {
-    return calculateCompleteness(fields, data).percent;
+  const getCompletenessPercent = (p: Property) => {
+    return calculateCompleteness(fields, { ...p.data, house_id: p.house_id }).percent;
   };
 
   const getPropertyZone = (data: Record<string, unknown>) => {
@@ -174,9 +174,9 @@ export default function PropertyListPage() {
       if (presetFilter === "updated_today") {
         filtered = filtered.filter((p) => isUpdatedToday(p.updated_at));
       } else if (presetFilter === "low_completeness") {
-        filtered = filtered.filter((p) => getCompletenessPercent(p.data) < 80);
+        filtered = filtered.filter((p) => getCompletenessPercent(p) < 90);
       } else if (presetFilter === "complete") {
-        filtered = filtered.filter((p) => getCompletenessPercent(p.data) >= 80);
+        filtered = filtered.filter((p) => getCompletenessPercent(p) >= 90);
       }
 
       // เรียง id น้อยไปมาก
@@ -266,8 +266,8 @@ export default function PropertyListPage() {
             <>
               <Badge variant="outline" className="h-9 px-3 flex items-center">
                 {presetFilter === "updated_today" && "แสดงเฉพาะ: บ้านที่อัปเดตวันนี้"}
-                {presetFilter === "low_completeness" && "แสดงเฉพาะ: % ต่ำกว่า 80"}
-                {presetFilter === "complete" && "แสดงเฉพาะ: บ้านที่สมบูรณ์"}
+                {presetFilter === "low_completeness" && "แสดงเฉพาะ: คะแนนต่ำกว่า 90%"}
+                {presetFilter === "complete" && "แสดงเฉพาะ: บ้านที่สมบูรณ์ (≥ 90%)"}
               </Badge>
               <Link href="/admin">
                 <Button variant="ghost" size="sm">ล้างตัวกรอง</Button>
@@ -371,12 +371,12 @@ export default function PropertyListPage() {
                           <Badge
                             variant="outline"
                             className={`text-xs ${
-                              getCompletenessPercent(p.data) < 80
+                              getCompletenessPercent(p) < 90
                                 ? "text-destructive border-destructive/40"
                                 : "text-green-600 border-green-300"
                             }`}
                           >
-                            {getCompletenessPercent(p.data)}%
+                            {getCompletenessPercent(p)}%
                           </Badge>
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
