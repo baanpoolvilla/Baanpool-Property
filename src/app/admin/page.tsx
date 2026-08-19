@@ -17,11 +17,18 @@ import {
   FileSpreadsheet,
   Share2,
   Clock,
+  Banknote,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
 import { usePropertyFields } from "@/hooks/use-property-fields";
 import { deleteProperty, fetchProperties, searchProperties } from "@/lib/api";
 import { calculateCompleteness } from "@/lib/completeness";
+import {
+  DAY_PRICE_FIELDS,
+  formatPrice,
+  getPriceForDate,
+  getPriceRange,
+} from "@/lib/pricing";
 import type { Property } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +61,34 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 type PresetFilter = "all" | "updated_today" | "low_completeness" | "complete";
+
+/** ราคาขายบ้านของ "วันนี้" พร้อมช่วงราคาทั้งสัปดาห์ */
+function PriceCell({ data }: { data: Record<string, unknown> }) {
+  const today = getPriceForDate(data);
+  const range = getPriceRange(data);
+  const todayLabel = DAY_PRICE_FIELDS[(new Date().getDay() + 6) % 7].label;
+
+  if (today === null && range === null) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+
+  return (
+    <div className="flex flex-col leading-tight">
+      <span className="flex items-center gap-1 text-sm font-medium">
+        <Banknote className="h-3 w-3 shrink-0 text-muted-foreground" />
+        {today !== null ? `฿${formatPrice(today)}` : "—"}
+        <span className="text-[11px] font-normal text-muted-foreground">
+          ({todayLabel})
+        </span>
+      </span>
+      {range && range.min !== range.max && (
+        <span className="text-[11px] text-muted-foreground">
+          ทั้งสัปดาห์ ฿{formatPrice(range.min)} – ฿{formatPrice(range.max)}
+        </span>
+      )}
+    </div>
+  );
+}
 
 export default function PropertyListPage() {
   const router = useRouter();
@@ -314,6 +349,9 @@ export default function PropertyListPage() {
                       <TableHead className="hidden lg:table-cell">
                         ผู้เข้าพักสูงสุด
                       </TableHead>
+                      <TableHead className="hidden md:table-cell w-44">
+                        ราคา / คืน
+                      </TableHead>
                       <TableHead className="hidden xl:table-cell w-28">
                         ความคืบหน้า
                       </TableHead>
@@ -366,6 +404,9 @@ export default function PropertyListPage() {
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <PriceCell data={p.data} />
                         </TableCell>
                         <TableCell className="hidden xl:table-cell">
                           <Badge

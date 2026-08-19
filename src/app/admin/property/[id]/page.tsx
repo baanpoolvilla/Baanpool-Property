@@ -21,6 +21,7 @@ import {
   Bed,
   Wrench,
   Clock,
+  Banknote,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -33,6 +34,7 @@ import { BathroomEditor } from "@/components/bathroom-editor";
 import type { BathroomDetail } from "@/components/bathroom-editor";
 import { NearbyPlacesEditor } from "@/components/nearby-places-editor";
 import type { NearbyPlace } from "@/components/nearby-places-editor";
+import { WeeklyPriceEditor } from "@/components/weekly-price-editor";
 import { usePropertyFields } from "@/hooks/use-property-fields";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import {
@@ -41,6 +43,7 @@ import {
   updateProperty,
 } from "@/lib/api";
 import { SECTIONS } from "@/lib/constants";
+import { DAY_PRICE_KEYS } from "@/lib/pricing";
 import type { Property, PropertyChangeField, PropertyField } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
@@ -69,6 +72,7 @@ const sectionIcons: Record<string, React.ReactNode> = {
   parking: <Car className="h-4 w-4" />,
   facilities: <Building className="h-4 w-4" />,
   equipment: <Wrench className="h-4 w-4" />,
+  pricing: <Banknote className="h-4 w-4" />,
   utilities: <Zap className="h-4 w-4" />,
   rules: <Shield className="h-4 w-4" />,
   time_rules: <Clock className="h-4 w-4" />,
@@ -491,12 +495,19 @@ export default function PropertyFormPage() {
                         </>
                       )}
 
+                      {/* pricing: ราคารายวัน จ–อา */}
+                      {section === "pricing" && (
+                        <WeeklyPriceEditor data={data} onChange={handleFieldChange} />
+                      )}
+
                       {/* Regular dynamic fields (conditional hiding) */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {sectionFields
                           .filter((f) => {
                             if (f.field_key === "ev_charger_details" && !data.ev_charger_available) return false;
                             if (f.field_key === "extra_bed_details" && !data.extra_bed_available) return false;
+                            // ราคารายวันแสดงผ่าน WeeklyPriceEditor แทน
+                            if (DAY_PRICE_KEYS.includes(f.field_key)) return false;
                             return true;
                           })
                           .map((field) => (

@@ -11,10 +11,11 @@ export const SECTIONS: SectionConfig[] = [
   { key: "parking", label: "ที่จอดรถ", icon: "car", order: 5 },
   { key: "facilities", label: "สิ่งอำนวยความสะดวก", icon: "building", order: 6 },
   { key: "equipment", label: "เครื่องใช้ / อุปกรณ์เสริม", icon: "wrench", order: 7 },
-  { key: "utilities", label: "สาธารณูปโภค / ค่าใช้จ่าย", icon: "zap", order: 8 },
-  { key: "rules", label: "กฎ / ข้อปฏิบัติ", icon: "shield", order: 9 },
-  { key: "time_rules", label: "เวลา / เสียง / แสงไฟ", icon: "clock", order: 10 },
-  { key: "contact", label: "ผู้ดูแล / ติดต่อ", icon: "phone", order: 11 },
+  { key: "pricing", label: "ราคา / ค่าบริการ", icon: "banknote", order: 8 },
+  { key: "utilities", label: "สาธารณูปโภค / ค่าใช้จ่าย", icon: "zap", order: 9 },
+  { key: "rules", label: "กฎ / ข้อปฏิบัติ", icon: "shield", order: 10 },
+  { key: "time_rules", label: "เวลา / เสียง / แสงไฟ", icon: "clock", order: 11 },
+  { key: "contact", label: "ผู้ดูแล / ติดต่อ", icon: "phone", order: 12 },
 ];
 
 // Fields excluded from completeness score calculation

@@ -129,16 +129,25 @@ INSERT INTO property_fields (field_key, label, type, section, required, options,
 -- 9. ราคา / ค่าบริการ (pricing)
 -- ─────────────────────────────────────────────────────────────────────────────
 INSERT INTO property_fields (field_key, label, type, section, required, options, order_index, is_active) VALUES
-('price_weekday', 'ราคา วันธรรมดา (บาท/คืน)', 'number', 'pricing', true, NULL, 90, true),
-('price_weekend', 'ราคา วันศุกร์–เสาร์ (บาท/คืน)', 'number', 'pricing', false, NULL, 91, true),
-('price_holiday', 'ราคา วันหยุดนักขัตฤกษ์ (บาท/คืน)', 'number', 'pricing', false, NULL, 92, true),
-('price_long_weekend', 'ราคา วันหยุดยาว (บาท/คืน)', 'number', 'pricing', false, NULL, 93, true),
-('price_new_year', 'ราคา ช่วงปีใหม่ (บาท/คืน)', 'number', 'pricing', false, NULL, 94, true),
-('price_songkran', 'ราคา ช่วงสงกรานต์ (บาท/คืน)', 'number', 'pricing', false, NULL, 95, true),
-('minimum_nights', 'เข้าพักขั้นต่ำ (คืน)', 'number', 'pricing', false, NULL, 96, true),
-('deposit_amount', 'ค่ามัดจำ (บาท)', 'number', 'pricing', false, NULL, 97, true),
-('cleaning_fee', 'ค่าทำความสะอาด (บาท)', 'number', 'pricing', false, NULL, 98, true),
-('pricing_notes', 'หมายเหตุราคา', 'textarea', 'pricing', false, NULL, 99, true);
+-- ราคาขายบ้าน รายวัน (จ อ พ พฤ ศ ส อา)
+('price_mon', 'ราคา วันจันทร์ (บาท/คืน)', 'number', 'pricing', false, NULL, 90, true),
+('price_tue', 'ราคา วันอังคาร (บาท/คืน)', 'number', 'pricing', false, NULL, 91, true),
+('price_wed', 'ราคา วันพุธ (บาท/คืน)', 'number', 'pricing', false, NULL, 92, true),
+('price_thu', 'ราคา วันพฤหัสบดี (บาท/คืน)', 'number', 'pricing', false, NULL, 93, true),
+('price_fri', 'ราคา วันศุกร์ (บาท/คืน)', 'number', 'pricing', false, NULL, 94, true),
+('price_sat', 'ราคา วันเสาร์ (บาท/คืน)', 'number', 'pricing', false, NULL, 95, true),
+('price_sun', 'ราคา วันอาทิตย์ (บาท/คืน)', 'number', 'pricing', false, NULL, 96, true),
+-- ราคาตามช่วงเทศกาล / ค่าใช้จ่ายอื่น
+('price_weekday', 'ราคา วันธรรมดา (บาท/คืน)', 'number', 'pricing', true, NULL, 97, true),
+('price_weekend', 'ราคา วันศุกร์–เสาร์ (บาท/คืน)', 'number', 'pricing', false, NULL, 98, true),
+('price_holiday', 'ราคา วันหยุดนักขัตฤกษ์ (บาท/คืน)', 'number', 'pricing', false, NULL, 99, true),
+('price_long_weekend', 'ราคา วันหยุดยาว (บาท/คืน)', 'number', 'pricing', false, NULL, 100, true),
+('price_new_year', 'ราคา ช่วงปีใหม่ (บาท/คืน)', 'number', 'pricing', false, NULL, 101, true),
+('price_songkran', 'ราคา ช่วงสงกรานต์ (บาท/คืน)', 'number', 'pricing', false, NULL, 102, true),
+('minimum_nights', 'เข้าพักขั้นต่ำ (คืน)', 'number', 'pricing', false, NULL, 103, true),
+('deposit_amount', 'ค่ามัดจำ (บาท)', 'number', 'pricing', false, NULL, 104, true),
+('cleaning_fee', 'ค่าทำความสะอาด (บาท)', 'number', 'pricing', false, NULL, 105, true),
+('pricing_notes', 'หมายเหตุราคา', 'textarea', 'pricing', false, NULL, 106, true);
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 10. สาธารณูปโภค / ค่าใช้จ่าย (utilities)
@@ -168,8 +177,7 @@ INSERT INTO property_fields (field_key, label, type, section, required, options,
 -- 12. เวลา / เสียง / แสงไฟ (time_rules)
 -- ─────────────────────────────────────────────────────────────────────────────
 INSERT INTO property_fields (field_key, label, type, section, required, options, order_index, is_active) VALUES
-('checkin_time', 'เวลาเช็คอิน', 'text', 'time_rules', true, NULL, 120, true),
-('checkout_time', 'เวลาเช็คเอาท์', 'text', 'time_rules', true, NULL, 121, true),
+('checkin_time', 'เวลาเช็คอิน' ', 'text', 'time_rules', true, NULL, 121, true),
 ('early_checkin_available', 'เช็คอินก่อนเวลาได้ (ถ้าว่าง)', 'boolean', 'time_rules', false, NULL, 122, true),
 ('late_checkout_available', 'เช็คเอาท์หลังเวลาได้ (ถ้าว่าง)', 'boolean', 'time_rules', false, NULL, 123, true),
 ('late_checkout_fee', 'ค่าเช็คเอาท์หลังเวลา (บาท)', 'number', 'time_rules', false, NULL, 124, true),
