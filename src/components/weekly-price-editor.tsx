@@ -58,7 +58,7 @@ export function WeeklyPriceEditor({ data, onChange }: WeeklyPriceEditorProps) {
           <Input
             type="number"
             min={0}
-            step={100}
+            step="any"
             value={fillValue}
             onChange={(e) => setFillValue(e.target.value)}
             onKeyDown={(e) => {
@@ -115,7 +115,7 @@ export function WeeklyPriceEditor({ data, onChange }: WeeklyPriceEditorProps) {
               id={`field-${day.key}`}
               type="number"
               min={0}
-              step={100}
+              step="any"
               value={prices[index] !== null ? String(prices[index]) : ""}
               onChange={(e) =>
                 onChange(day.key, e.target.value === "" ? null : Number(e.target.value))
